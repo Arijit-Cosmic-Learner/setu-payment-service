@@ -7,8 +7,9 @@ This file:
 1. Creates the FastAPI app instance
 2. Registers all routers (events, transactions, reconciliation)
 3. Adds a visual interactive dashboard UI at /
-4. Adds health check endpoints
-5. Configures OpenAPI documentation metadata
+4. Adds a branded custom ReDoc documentation portal at /redoc
+5. Adds health check endpoints
+6. Configures OpenAPI documentation metadata
 """
 
 from pathlib import Path
@@ -18,6 +19,7 @@ from fastapi.responses import HTMLResponse
 
 from app.config import settings
 from app.routers import events, transactions, reconciliation
+from app.redoc_custom import get_custom_redoc_html
 
 # ===========================================================
 # Create FastAPI App
@@ -38,22 +40,21 @@ app = FastAPI(
 
     ### Event Lifecycle
     ```
-    payment_initiated   payment_processed   settled   (happy path)
-    payment_initiated   payment_failed               (failure path)
+    payment_initiated -> payment_processed -> settled   (happy path)
+    payment_initiated -> payment_failed                 (failure path)
     ```
     """,
     contact={
         "name": "Arijit Mitra",
         "url": "https://github.com/Arijit-Cosmic-Learner/setu-payment-service",
     },
-    docs_url="/docs",       # Swagger UI
-    redoc_url="/redoc",     # ReDoc UI
+    docs_url="/docs",       # Swagger UI (untouched)
+    redoc_url=None,         # Managed by custom branded route below
 )
 
 # ===========================================================
 # CORS Middleware
 # ===========================================================
-# Allows any frontend or Postman to call this API
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -85,7 +86,6 @@ def root_portal():
     if INDEX_HTML_PATH.exists():
         return HTMLResponse(content=INDEX_HTML_PATH.read_text(encoding="utf-8"))
     
-    # Graceful fallback if HTML file is missing
     return HTMLResponse(content=f"""
     <!DOCTYPE html>
     <html>
@@ -93,10 +93,26 @@ def root_portal():
       <body style="font-family: sans-serif; padding: 2rem; text-align: center;">
         <h1>{settings.APP_NAME} v{settings.APP_VERSION}</h1>
         <p>Service is live and healthy.</p>
-        <p><a href="/docs">Go to Swagger UI (/docs)</a> | <a href="/health">JSON Health Check</a></p>
+        <p><a href="/docs">Swagger UI (/docs)</a> | <a href="/redoc">ReDoc (/redoc)</a></p>
       </body>
     </html>
     """)
+
+
+# ===========================================================
+# Custom Branded ReDoc UI
+# ===========================================================
+@app.get("/redoc", response_class=HTMLResponse, tags=["Documentation"], summary="Branded ReDoc Documentation")
+def redoc_html():
+    """
+    Serves the custom styled ReDoc documentation aligned with the Setu theme.
+    """
+    return HTMLResponse(
+        content=get_custom_redoc_html(
+            openapi_url=app.openapi_url or "/openapi.json",
+            title=f"{settings.APP_NAME} - ReDoc API Documentation",
+        )
+    )
 
 
 # ===========================================================
@@ -112,4 +128,5 @@ def health():
         "service": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "docs": "/docs",
+        "redoc": "/redoc",
     }
