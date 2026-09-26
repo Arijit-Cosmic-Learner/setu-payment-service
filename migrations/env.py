@@ -16,7 +16,7 @@ import app.models  # noqa: F401 - ensures all models are registered with Base
 config = context.config
 
 # Override the sqlalchemy.url with our .env value
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL.replace("%", "%%"))
 
 # Setup logging from alembic.ini
 if config.config_file_name is not None:
@@ -56,3 +56,4 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
+
