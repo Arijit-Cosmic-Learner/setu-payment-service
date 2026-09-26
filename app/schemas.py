@@ -10,13 +10,13 @@ Think of schemas as the "contract" between the API and its callers:
 WHY separate from models.py?
 - models.py = database table shape (how data is STORED)
 - schemas.py = API shape (how data is COMMUNICATED)
-- They don't always match! e.g. we never expose internal DB IDs in the API.
+- They do not always match! e.g. we never expose internal DB IDs in the API.
 """
 
 from datetime import datetime
 from decimal import Decimal
-from typing import List, Optional, Literal
-from pydantic import BaseModel, Field, field_validator
+from typing import List, Optional, Literal, Any, Dict
+from pydantic import BaseModel, Field
 
 
 # ===========================================================
@@ -51,7 +51,7 @@ class EventResponse(BaseModel):
     timestamp: datetime
     received_at: datetime
     ingestion_status: Literal["created", "already_processed"] = Field(
-        description="'created' = new event stored. 'already_processed' = duplicate, ignored safely."
+        description="created = new event stored. already_processed = duplicate, ignored safely."
     )
 
     class Config:
@@ -76,7 +76,7 @@ class MerchantInfo(BaseModel):
 # ===========================================================
 
 class EventInHistory(BaseModel):
-    """A single event in a transaction's event history."""
+    """A single event in a transactions event history."""
     event_id: str
     event_type: str
     amount: Decimal
@@ -90,7 +90,7 @@ class EventInHistory(BaseModel):
 
 class TransactionSummary(BaseModel):
     """
-    Used in GET /transactions list — one row per transaction.
+    Used in GET /transactions list - one row per transaction.
     Lightweight: no event history included.
     """
     transaction_id: str
@@ -110,7 +110,7 @@ class TransactionSummary(BaseModel):
 
 class TransactionDetail(TransactionSummary):
     """
-    Used in GET /transactions/{id} — full detail.
+    Used in GET /transactions/{id} - full detail.
     Includes complete event history for this transaction.
     """
     events: List[EventInHistory] = []
@@ -127,7 +127,6 @@ class PaginatedTransactions(BaseModel):
     """
     Standard pagination envelope for GET /transactions.
     Every paginated API should return: total, page, page_size, items.
-    This lets the caller know how many pages exist.
     """
     total: int = Field(description="Total number of matching transactions")
     page: int = Field(description="Current page number (1-indexed)")
@@ -137,27 +136,98 @@ class PaginatedTransactions(BaseModel):
 
 
 # ===========================================================
-# QUERY PARAMETER SCHEMAS
+# RECONCILIATION SCHEMAS
 # ===========================================================
 
-class TransactionFilters(BaseModel):
+class MerchantSummary(BaseModel):
     """
-    All supported filters for GET /transactions.
-    FastAPI reads these from the URL query string automatically.
-    Example: GET /transactions?merchant_id=merchant_1&status=failed&page=2
+    Aggregated stats for a single merchant.
+    Used in GET /reconciliation/summary -> by_merchant section.
     """
-    merchant_id: Optional[str] = Field(default=None, description="Filter by merchant")
-    status: Optional[Literal["initiated", "processed", "failed", "settled"]] = Field(
-        default=None, description="Filter by current transaction status"
-    )
-    date_from: Optional[datetime] = Field(default=None, description="Filter transactions from this date (ISO 8601)")
-    date_to: Optional[datetime] = Field(default=None, description="Filter transactions up to this date (ISO 8601)")
-    page: int = Field(default=1, ge=1, description="Page number (starts at 1)")
-    page_size: int = Field(default=20, ge=1, le=100, description="Results per page (max 100)")
-    sort_by: Literal["created_at", "amount", "status", "updated_at"] = Field(
-        default="created_at", description="Field to sort by"
-    )
-    sort_order: Literal["asc", "desc"] = Field(default="desc", description="Sort direction")
+    merchant_id: str
+    merchant_name: str
+    total_transactions: int
+    total_amount: Decimal
+    settled_count: int
+    settled_amount: Decimal
+    processed_count: int
+    failed_count: int
+    initiated_count: int
+    settlement_rate_pct: float = Field(description="Percentage of transactions that are settled")
+
+
+class StatusBreakdown(BaseModel):
+    """Count and amount for each transaction status."""
+    status: str
+    count: int
+    total_amount: Decimal
+
+
+class DateSummary(BaseModel):
+    """Daily aggregation row."""
+    date: str
+    total_transactions: int
+    total_amount: Decimal
+    settled_count: int
+    settled_amount: Decimal
+    failed_count: int
+    processed_count: int
+
+
+class ReconciliationSummaryResponse(BaseModel):
+    """
+    Full response for GET /reconciliation/summary.
+    Contains three views of the same data:
+    - by_merchant: one row per merchant
+    - by_status:   one row per status value
+    - by_date:     one row per calendar date
+    """
+    generated_at: datetime
+    total_transactions: int
+    total_amount: Decimal
+    total_settled_amount: Decimal
+    by_merchant: List[MerchantSummary]
+    by_status: List[StatusBreakdown]
+    by_date: List[DateSummary]
+
+
+class DiscrepancyItem(BaseModel):
+    """
+    A single transaction flagged as having a discrepancy.
+    discrepancy_type tells you WHAT is wrong.
+    discrepancy_description tells you WHY it matters.
+    """
+    transaction_id: str
+    merchant_id: str
+    merchant_name: Optional[str] = None
+    amount: Decimal
+    currency: str
+    payment_status: str
+    settlement_status: str
+    status: str
+    discrepancy_type: Literal[
+        "settled_after_failure",
+        "processed_not_settled",
+        "stale_initiated"
+    ]
+    discrepancy_description: str
+    created_at: datetime
+    updated_at: datetime
+
+
+class DiscrepancyBreakdown(BaseModel):
+    """Count of each discrepancy type - for a quick overview."""
+    settled_after_failure: int = Field(description="Payment failed but settlement was recorded (impossible state)")
+    processed_not_settled: int = Field(description="Payment processed but no settlement recorded")
+    stale_initiated: int = Field(description="Payment initiated but stuck with no follow-up event")
+
+
+class DiscrepanciesResponse(BaseModel):
+    """Full response for GET /reconciliation/discrepancies."""
+    generated_at: datetime
+    total_discrepancies: int
+    breakdown: DiscrepancyBreakdown
+    discrepancies: List[DiscrepancyItem]
 
 
 # ===========================================================
