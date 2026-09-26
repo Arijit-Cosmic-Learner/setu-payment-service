@@ -5,7 +5,7 @@ Reads environment variables from .env file using Pydantic Settings.
 All configuration for the app lives here in one place.
 """
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -21,10 +21,9 @@ class Settings(BaseSettings):
     DEFAULT_PAGE_SIZE: int = 20
     MAX_PAGE_SIZE: int = 100
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8')
 
 
 # Single instance used across the entire app
 settings = Settings()
+

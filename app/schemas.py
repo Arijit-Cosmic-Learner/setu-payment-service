@@ -16,7 +16,7 @@ WHY separate from models.py?
 from datetime import datetime
 from decimal import Decimal
 from typing import List, Optional, Literal, Any, Dict
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 # ===========================================================
@@ -54,8 +54,7 @@ class EventResponse(BaseModel):
         description="created = new event stored. already_processed = duplicate, ignored safely."
     )
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ===========================================================
@@ -67,8 +66,7 @@ class MerchantInfo(BaseModel):
     merchant_id: str
     merchant_name: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ===========================================================
@@ -84,8 +82,7 @@ class EventInHistory(BaseModel):
     timestamp: datetime
     received_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TransactionSummary(BaseModel):
@@ -104,8 +101,7 @@ class TransactionSummary(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TransactionDetail(TransactionSummary):
@@ -115,8 +111,7 @@ class TransactionDetail(TransactionSummary):
     """
     events: List[EventInHistory] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ===========================================================
@@ -238,3 +233,4 @@ class ErrorResponse(BaseModel):
     """Standard error response shape."""
     detail: str
     error_code: Optional[str] = None
+
