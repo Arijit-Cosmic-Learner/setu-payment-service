@@ -57,6 +57,28 @@ class EventResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+
+class EventSummary(BaseModel):
+    """Lightweight event row used in GET /events list."""
+    event_id: str
+    event_type: str
+    transaction_id: str
+    merchant_id: str
+    amount: Decimal
+    currency: str
+    timestamp: datetime
+    received_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PaginatedEvents(BaseModel):
+    """Standard pagination envelope for GET /events."""
+    total: int = Field(description="Total number of matching events")
+    page: int = Field(description="Current page number (1-indexed)")
+    page_size: int = Field(description="Number of items per page")
+    total_pages: int = Field(description="Total number of pages")
+    items: List[EventSummary]
 # ===========================================================
 # MERCHANT SCHEMAS
 # ===========================================================
@@ -233,4 +255,5 @@ class ErrorResponse(BaseModel):
     """Standard error response shape."""
     detail: str
     error_code: Optional[str] = None
+
 
