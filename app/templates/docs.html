@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Setu Payment Service - API Reference</title>
+  <title>Setu Payment Service - API Reference & Developer Guide</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -30,6 +30,7 @@
       --radius-lg: 16px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       background-color: var(--bg);
@@ -81,24 +82,24 @@
     .btn-primary:hover { background: #2563eb; }
     .layout { display: flex; max-width: 1400px; margin: 0 auto; min-height: calc(100vh - 65px); }
     .sidebar {
-      width: 290px; position: sticky; top: 65px; height: calc(100vh - 65px);
+      width: 300px; position: sticky; top: 65px; height: calc(100vh - 65px);
       overflow-y: auto; padding: 1.75rem 1.25rem; border-right: 1px solid var(--card-border);
       flex-shrink: 0;
     }
     .nav-section-title {
-      font-size: 0.75rem; font-weight: 700; color: var(--text-subtle);
+      font-size: 0.72rem; font-weight: 700; color: var(--text-subtle);
       text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem;
       padding-left: 0.5rem;
     }
-    .nav-links { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 1.75rem; }
+    .nav-links { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 1.5rem; }
     .nav-item {
       display: flex; align-items: center; gap: 0.65rem; padding: 0.55rem 0.75rem;
       border-radius: var(--radius-sm); color: var(--text-muted); text-decoration: none;
-      font-size: 0.875rem; font-weight: 500; transition: all 0.15s ease;
+      font-size: 0.85rem; font-weight: 500; transition: all 0.15s ease;
     }
     .nav-item:hover { background: #1e293b; color: #fff; }
     .method-pill {
-      font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 700;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 700;
       padding: 0.15rem 0.4rem; border-radius: 4px; line-height: 1;
     }
     .pill-post { background: var(--accent-green-soft); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.3); }
@@ -107,20 +108,25 @@
     .page-header { margin-bottom: 2.5rem; border-bottom: 1px solid var(--card-border); padding-bottom: 1.75rem; }
     .page-header h1 { font-size: 2.3rem; font-weight: 800; letter-spacing: -0.03em; color: #fff; margin-bottom: 0.5rem; }
     .page-header p { font-size: 1.05rem; color: var(--text-muted); }
-    .endpoint-card {
+    .card {
       background: var(--card-bg); border: 1px solid var(--card-border);
       border-radius: var(--radius-lg); padding: 2rem; margin-bottom: 2.5rem;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
-    .endpoint-card:hover { border-color: var(--card-hover); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); }
+    .card:hover { border-color: var(--card-hover); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); }
+    .card-title { font-size: 1.4rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.6rem; }
+    .card-desc { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 1.5rem; }
     .endpoint-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; }
     .endpoint-path { font-family: 'JetBrains Mono', monospace; font-size: 1.15rem; font-weight: 700; color: #fff; }
-    .endpoint-title { font-size: 1.35rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
-    .endpoint-desc { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 1.5rem; }
     .info-callout {
       background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2);
       border-left: 3px solid var(--accent-blue); border-radius: var(--radius-sm);
       padding: 0.85rem 1rem; font-size: 0.875rem; color: #bae6fd; margin-bottom: 1.5rem;
+    }
+    .warn-callout {
+      background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.2);
+      border-left: 3px solid var(--accent-amber); border-radius: var(--radius-sm);
+      padding: 0.85rem 1rem; font-size: 0.875rem; color: #fef08a; margin-bottom: 1.5rem;
     }
     .endpoint-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; }
     @media (max-width: 1000px) {
@@ -173,6 +179,10 @@
       border-radius: var(--radius-sm); padding: 0.75rem; font-family: 'JetBrains Mono', monospace;
       font-size: 0.75rem; color: #38bdf8; max-height: 220px; overflow-y: auto; display: none;
     }
+    .concept-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-top: 1rem; }
+    .concept-box { background: #090d16; border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 1.25rem; }
+    .concept-box-title { font-weight: 700; color: #fff; font-size: 1rem; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.5rem; }
+    .concept-box-desc { font-size: 0.85rem; color: var(--text-muted); }
   </style>
 </head>
 <body>
@@ -195,42 +205,156 @@
 
   <div class="layout">
     <aside class="sidebar">
+      <div class="nav-section-title">Primer & Concepts</div>
+      <div class="nav-links">
+        <a href="#fintech-101" class="nav-item"><span>??</span><span>Fintech 101 Glossary</span></a>
+        <a href="#system-architecture" class="nav-item"><span>???</span><span>System Architecture</span></a>
+        <a href="#event-matrix" class="nav-item"><span>??</span><span>Event & State Matrix</span></a>
+        <a href="#failure-modes" class="nav-item"><span>??</span><span>Failure Modes & Edge Cases</span></a>
+      </div>
+
       <div class="nav-section-title">Event Ingestion</div>
       <div class="nav-links">
         <a href="#post-events" class="nav-item"><span class="method-pill pill-post">POST</span><span>/events</span></a>
         <a href="#get-events" class="nav-item"><span class="method-pill pill-get">GET</span><span>/events</span></a>
       </div>
+
       <div class="nav-section-title">Transactions</div>
       <div class="nav-links">
         <a href="#get-transactions" class="nav-item"><span class="method-pill pill-get">GET</span><span>/transactions</span></a>
         <a href="#get-transaction-detail" class="nav-item"><span class="method-pill pill-get">GET</span><span>/transactions/{id}</span></a>
       </div>
+
       <div class="nav-section-title">Reconciliation</div>
       <div class="nav-links">
         <a href="#get-rec-summary" class="nav-item"><span class="method-pill pill-get">GET</span><span>/reconciliation/summary</span></a>
         <a href="#get-rec-discrepancies" class="nav-item"><span class="method-pill pill-get">GET</span><span>/reconciliation/discrepancies</span></a>
       </div>
-      <div class="nav-section-title">System Health</div>
+
+      <div class="nav-section-title">System & Errors</div>
       <div class="nav-links">
         <a href="#get-health" class="nav-item"><span class="method-pill pill-get">GET</span><span>/health</span></a>
+        <a href="#error-codes" class="nav-item"><span>???</span><span>Error Codes Guide</span></a>
       </div>
     </aside>
 
     <main class="content">
       <div class="page-header">
-        <h1>Developer API Reference</h1>
-        <p>Comprehensive specifications, payload schemas, and live execution tools for the Setu Payment & Settlement Engine.</p>
+        <h1>Developer API Reference & Guide</h1>
+        <p>Comprehensive specifications, lifecycle rules, payload schemas, and interactive execution tools.</p>
       </div>
 
-      <!-- POST /events -->
-      <section id="post-events" class="endpoint-card">
+      <!-- SECTION: Fintech 101 -->
+      <section id="fintech-101" class="card">
+        <h2 class="card-title"><span>??</span> Fintech 101: Plain-English Concept Glossary</h2>
+        <p class="card-desc">Understanding core payment terminology before integrating or inspecting APIs.</p>
+
+        <div class="concept-grid">
+          <div class="concept-box">
+            <div class="concept-box-title"><span>?</span> Idempotency</div>
+            <p class="concept-box-desc">
+              Like an elevator button: pressing it multiple times does not summon multiple elevators. In payments, retrying a webhook with the same <code>event_id</code> guarantees zero duplicate ledger charges.
+            </p>
+          </div>
+          <div class="concept-box">
+            <div class="concept-box-title"><span>??</span> Reconciliation vs. Settlement</div>
+            <p class="concept-box-desc">
+              <strong>Settlement</strong> is the actual bank payout deposited into the merchant's account. <strong>Reconciliation</strong> is the automated mathematical audit comparing internal logs with banking statements.
+            </p>
+          </div>
+          <div class="concept-box">
+            <div class="concept-box-title"><span>??</span> State Machine</div>
+            <p class="concept-box-desc">
+              Deterministic lifecycle rules. Transactions can only advance forward (<code>initiated</code> ? <code>processed</code> ? <code>settled</code>) and cannot jump backward.
+            </p>
+          </div>
+          <div class="concept-box">
+            <div class="concept-box-title"><span>??</span> Discrepancy</div>
+            <p class="concept-box-desc">
+              An anomaly where bank reports failure but settlement file shows credit, or money was deducted but not settled within the cutoff window.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION: Architecture -->
+      <section id="system-architecture" class="card">
+        <h2 class="card-title"><span>???</span> System Architecture in Plain English</h2>
+        <p class="card-desc">How events flow through the service from checkout to merchant payout.</p>
+
+        <div class="info-callout" style="line-height: 1.8;">
+          <strong>1. Merchant / Client App:</strong> Emits lifecycle webhooks as customers complete checkout.<br>
+          <strong>2. FastAPI Ingestion Bus:</strong> Validates payload schemas, enforces idempotency keys, and updates the state machine.<br>
+          <strong>3. PostgreSQL Financial Ledger:</strong> Serves as the single source of truth for chronological transaction history.<br>
+          <strong>4. Automated Reconciliation Engine:</strong> Audits transactions across all merchants, identifying settlement rates and ledger discrepancies.
+        </div>
+      </section>
+
+      <!-- SECTION: Event Matrix -->
+      <section id="event-matrix" class="card">
+        <h2 class="card-title"><span>??</span> The Event & State Machine Matrix</h2>
+        <p class="card-desc">The 4 deterministic event types, their real-world triggers, and balance impact.</p>
+
+        <table class="param-table">
+          <thead><tr><th>Event Type</th><th>Real-World Trigger</th><th>Transaction State</th><th>Balance Impact</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="method-pill pill-post">payment_initiated</span></td>
+              <td>Customer starts checkout on app/web.</td>
+              <td><code style="color: var(--accent-amber);">initiated</code></td>
+              <td>?0.00 (Intent created).</td>
+            </tr>
+            <tr>
+              <td><span class="method-pill pill-post">payment_processed</span></td>
+              <td>Bank/gateway confirms capture.</td>
+              <td><code style="color: var(--accent-blue);">processed</code></td>
+              <td>Funds held in gateway escrow.</td>
+            </tr>
+            <tr>
+              <td><span class="method-pill pill-post">settled</span></td>
+              <td>T+1 or T+2 merchant payout batch.</td>
+              <td><code style="color: var(--accent-green);">settled</code></td>
+              <td>Funds credited to merchant account.</td>
+            </tr>
+            <tr>
+              <td><span class="method-pill pill-post" style="background: var(--accent-red-soft); color: var(--accent-red); border-color: rgba(248, 113, 113, 0.3);">payment_failed</span></td>
+              <td>OTP timeout, decline, or bank error.</td>
+              <td><code style="color: var(--accent-red);">failed</code></td>
+              <td>?0.00 (No money moved).</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- SECTION: Failure Modes -->
+      <section id="failure-modes" class="card">
+        <h2 class="card-title"><span>??</span> Failure Modes & Edge Case Safeguards</h2>
+        <p class="card-desc">How the engine autonomously handles out-of-order delivery, network replays, and anomalies.</p>
+
+        <div class="warn-callout">
+          <strong>1. Network Replays & Duplicate Ingestion:</strong><br>
+          If a gateway retries the same event, the engine responds with <code>HTTP 200 OK ("ingestion_status": "already_processed")</code> with zero duplicate entries.
+        </div>
+        <div class="info-callout">
+          <strong>2. Out-of-Order Webhook Delivery:</strong><br>
+          If <code>settled</code> arrives before <code>payment_processed</code> due to queue latency, the terminal state is preserved and both events are ordered chronologically by timestamp.
+        </div>
+        <div class="warn-callout" style="border-left-color: var(--accent-red); color: #fecaca; background: rgba(239, 68, 68, 0.08);">
+          <strong>3. The 3 Core Discrepancies:</strong><br>
+          ? <code>settled_after_failure</code>: Critical anomaly where merchant was paid despite decline.<br>
+          ? <code>processed_not_settled</code>: Captured funds not settled within cutoff window.<br>
+          ? <code>stale_initiated</code>: Abandoned user checkout session (> 24h).
+        </div>
+      </section>
+
+      <!-- 1. POST /events -->
+      <section id="post-events" class="card">
         <div class="endpoint-header">
           <span class="method-pill pill-post" style="font-size: 0.85rem; padding: 0.3rem 0.6rem;">POST</span>
           <span class="endpoint-path">/events</span>
         </div>
-        <h2 class="endpoint-title">Ingest Payment Lifecycle Event</h2>
-        <p class="endpoint-desc">Ingests an event into the idempotent ledger. Safely transitions transaction state machine and credits accounts.</p>
-        <div class="info-callout">?? <strong>Guaranteed Idempotency:</strong> Re-sending the same <code style="font-family: 'JetBrains Mono';">event_id</code> returns HTTP 200 with <code style="font-family: 'JetBrains Mono';">"ingestion_status": "already_processed"</code> without duplicate state mutations.</div>
+        <h2 style="font-size: 1.3rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Ingest Payment Event</h2>
+        <p class="card-desc">Ingests a payment lifecycle event into the idempotent event bus.</p>
 
         <div class="endpoint-grid">
           <div>
@@ -238,11 +362,11 @@
             <table class="param-table">
               <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
               <tbody>
-                <tr><td><div class="param-name">event_id</div><span class="param-req">Required</span></td><td><span class="param-type">UUID</span></td><td>Unique idempotency key for this event.</td></tr>
-                <tr><td><div class="param-name">event_type</div><span class="param-req">Required</span></td><td><span class="param-type">Enum</span></td><td><code style="color: #cbd5e1;">payment_initiated</code>, <code style="color: #cbd5e1;">payment_processed</code>, <code style="color: #cbd5e1;">settled</code>, <code style="color: #cbd5e1;">payment_failed</code></td></tr>
-                <tr><td><div class="param-name">transaction_id</div><span class="param-req">Required</span></td><td><span class="param-type">UUID</span></td><td>Unique ID of the payment transaction.</td></tr>
-                <tr><td><div class="param-name">merchant_id</div><span class="param-req">Required</span></td><td><span class="param-type">string</span></td><td>Registered merchant identifier.</td></tr>
-                <tr><td><div class="param-name">amount</div><span class="param-req">Required</span></td><td><span class="param-type">Decimal</span></td><td>Positive decimal amount (> 0.00).</td></tr>
+                <tr><td><div class="param-name">event_id</div><span class="param-req">Required</span></td><td><span class="param-type">UUID</span></td><td>Idempotency key.</td></tr>
+                <tr><td><div class="param-name">event_type</div><span class="param-req">Required</span></td><td><span class="param-type">Enum</span></td><td><code>payment_initiated</code>, <code>payment_processed</code>, <code>settled</code>, <code>payment_failed</code></td></tr>
+                <tr><td><div class="param-name">transaction_id</div><span class="param-req">Required</span></td><td><span class="param-type">UUID</span></td><td>Transaction UUID.</td></tr>
+                <tr><td><div class="param-name">merchant_id</div><span class="param-req">Required</span></td><td><span class="param-type">string</span></td><td>Merchant identifier.</td></tr>
+                <tr><td><div class="param-name">amount</div><span class="param-req">Required</span></td><td><span class="param-type">Decimal</span></td><td>Positive decimal (> 0.00).</td></tr>
               </tbody>
             </table>
           </div>
@@ -268,14 +392,14 @@
         </div>
       </section>
 
-      <!-- GET /events -->
-      <section id="get-events" class="endpoint-card">
+      <!-- 2. GET /events -->
+      <section id="get-events" class="card">
         <div class="endpoint-header">
           <span class="method-pill pill-get" style="font-size: 0.85rem; padding: 0.3rem 0.6rem;">GET</span>
           <span class="endpoint-path">/events</span>
         </div>
-        <h2 class="endpoint-title">List Ingested Events</h2>
-        <p class="endpoint-desc">Retrieves a paginated list of all received payment events with optional filtering.</p>
+        <h2 style="font-size: 1.3rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">List Ingested Events</h2>
+        <p class="card-desc">Paginated list of all received payment events with multi-field filters.</p>
 
         <div class="endpoint-grid">
           <div>
@@ -285,7 +409,7 @@
               <tbody>
                 <tr><td><div class="param-name">page</div><span class="param-opt">Default: 1</span></td><td><span class="param-type">integer</span></td><td>Page index (>= 1).</td></tr>
                 <tr><td><div class="param-name">page_size</div><span class="param-opt">Default: 50</span></td><td><span class="param-type">integer</span></td><td>Items per page (max 100).</td></tr>
-                <tr><td><div class="param-name">event_type</div><span class="param-opt">Optional</span></td><td><span class="param-type">string</span></td><td>Filter by status / type.</td></tr>
+                <tr><td><div class="param-name">event_type</div><span class="param-opt">Optional</span></td><td><span class="param-type">string</span></td><td>Filter by event type.</td></tr>
               </tbody>
             </table>
           </div>
@@ -308,14 +432,14 @@
         </div>
       </section>
 
-      <!-- GET /transactions -->
-      <section id="get-transactions" class="endpoint-card">
+      <!-- 3. GET /transactions -->
+      <section id="get-transactions" class="card">
         <div class="endpoint-header">
           <span class="method-pill pill-get" style="font-size: 0.85rem; padding: 0.3rem 0.6rem;">GET</span>
           <span class="endpoint-path">/transactions</span>
         </div>
-        <h2 class="endpoint-title">List Payment Transactions</h2>
-        <p class="endpoint-desc">Query transactions with filtering by merchant, status, and custom sort order.</p>
+        <h2 style="font-size: 1.3rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">List Payment Transactions</h2>
+        <p class="card-desc">Query transactions with status and merchant filters.</p>
 
         <div class="endpoint-grid">
           <div>
@@ -323,7 +447,7 @@
             <table class="param-table">
               <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
               <tbody>
-                <tr><td><div class="param-name">status</div><span class="param-opt">Optional</span></td><td><span class="param-type">string</span></td><td>Filter: <code style="color: #cbd5e1;">initiated</code>, <code style="color: #cbd5e1;">processed</code>, <code style="color: #cbd5e1;">settled</code>, <code style="color: #cbd5e1;">failed</code>.</td></tr>
+                <tr><td><div class="param-name">status</div><span class="param-opt">Optional</span></td><td><span class="param-type">string</span></td><td><code>initiated</code>, <code>processed</code>, <code>settled</code>, <code>failed</code>.</td></tr>
                 <tr><td><div class="param-name">merchant_id</div><span class="param-opt">Optional</span></td><td><span class="param-type">string</span></td><td>Filter by merchant UUID/ID.</td></tr>
                 <tr><td><div class="param-name">page_size</div><span class="param-opt">Default: 20</span></td><td><span class="param-type">integer</span></td><td>Items per page (max 100).</td></tr>
               </tbody>
@@ -348,14 +472,14 @@
         </div>
       </section>
 
-      <!-- GET /transactions/{id} -->
-      <section id="get-transaction-detail" class="endpoint-card">
+      <!-- 4. GET /transactions/{id} -->
+      <section id="get-transaction-detail" class="card">
         <div class="endpoint-header">
           <span class="method-pill pill-get" style="font-size: 0.85rem; padding: 0.3rem 0.6rem;">GET</span>
           <span class="endpoint-path">/transactions/{id}</span>
         </div>
-        <h2 class="endpoint-title">Get Transaction Details & Audit Trail</h2>
-        <p class="endpoint-desc">Reconstructs full transaction state along with its complete chronological event history.</p>
+        <h2 style="font-size: 1.3rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Get Transaction Details & Audit Trail</h2>
+        <p class="card-desc">Reconstructs full transaction state along with its complete chronological event history.</p>
 
         <div class="endpoint-grid">
           <div>
@@ -381,14 +505,14 @@
         </div>
       </section>
 
-      <!-- GET /reconciliation/summary -->
-      <section id="get-rec-summary" class="endpoint-card">
+      <!-- 5. GET /reconciliation/summary -->
+      <section id="get-rec-summary" class="card">
         <div class="endpoint-header">
           <span class="method-pill pill-get" style="font-size: 0.85rem; padding: 0.3rem 0.6rem;">GET</span>
           <span class="endpoint-path">/reconciliation/summary</span>
         </div>
-        <h2 class="endpoint-title">Reconciliation Financial Summary</h2>
-        <p class="endpoint-desc">Aggregates financial volumes, settled amounts, and merchant performance metrics.</p>
+        <h2 style="font-size: 1.3rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Reconciliation Financial Summary</h2>
+        <p class="card-desc">Aggregates financial volumes, settled amounts, and merchant performance metrics.</p>
 
         <div class="endpoint-grid">
           <div>
@@ -421,14 +545,14 @@
         </div>
       </section>
 
-      <!-- GET /reconciliation/discrepancies -->
-      <section id="get-rec-discrepancies" class="endpoint-card">
+      <!-- 6. GET /reconciliation/discrepancies -->
+      <section id="get-rec-discrepancies" class="card">
         <div class="endpoint-header">
           <span class="method-pill pill-get" style="font-size: 0.85rem; padding: 0.3rem 0.6rem;">GET</span>
           <span class="endpoint-path">/reconciliation/discrepancies</span>
         </div>
-        <h2 class="endpoint-title">Audit Ledger Discrepancies</h2>
-        <p class="endpoint-desc">Automated auditing engine that flags anomalies like <code style="color: #fbbf24;">settled_after_failure</code>, <code style="color: #38bdf8;">processed_not_settled</code>, and <code style="color: #f87171;">stale_initiated</code>.</p>
+        <h2 style="font-size: 1.3rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Audit Ledger Discrepancies</h2>
+        <p class="card-desc">Automated auditing engine that flags anomalies.</p>
 
         <div class="endpoint-grid">
           <div>
@@ -436,9 +560,9 @@
             <table class="param-table">
               <thead><tr><th>Type</th><th>Description</th></tr></thead>
               <tbody>
-                <tr><td><div class="param-name" style="color: #fbbf24;">settled_after_failure</div></td><td>Funds settled despite gateway failure.</td></tr>
-                <tr><td><div class="param-name" style="color: #38bdf8;">processed_not_settled</div></td><td>Payment captured but not settled.</td></tr>
-                <tr><td><div class="param-name" style="color: #f87171;">stale_initiated</div></td><td>Stuck in initiated state with no update.</td></tr>
+                <tr><td><div class="param-name" style="color: var(--accent-amber);">settled_after_failure</div></td><td>Funds settled despite gateway failure.</td></tr>
+                <tr><td><div class="param-name" style="color: var(--accent-blue);">processed_not_settled</div></td><td>Payment captured but not settled.</td></tr>
+                <tr><td><div class="param-name" style="color: var(--accent-red);">stale_initiated</div></td><td>Stuck in initiated state with no update.</td></tr>
               </tbody>
             </table>
           </div>
@@ -461,14 +585,14 @@
         </div>
       </section>
 
-      <!-- GET /health -->
-      <section id="get-health" class="endpoint-card">
+      <!-- 7. GET /health -->
+      <section id="get-health" class="card">
         <div class="endpoint-header">
           <span class="method-pill pill-get" style="font-size: 0.85rem; padding: 0.3rem 0.6rem;">GET</span>
           <span class="endpoint-path">/health</span>
         </div>
-        <h2 class="endpoint-title">System Health Probe</h2>
-        <p class="endpoint-desc">Lightweight machine-readable JSON health check for uptime monitors.</p>
+        <h2 style="font-size: 1.3rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">System Health Probe</h2>
+        <p class="card-desc">Lightweight machine-readable JSON health check for uptime monitors.</p>
 
         <div class="endpoint-grid">
           <div>
@@ -492,6 +616,33 @@
             </div>
           </div>
         </div>
+      </section>
+
+      <!-- SECTION: Error Codes Guide -->
+      <section id="error-codes" class="card">
+        <h2 class="card-title"><span>???</span> Error Codes & Troubleshooting Guide</h2>
+        <p class="card-desc">Human-readable meanings for standard API responses.</p>
+
+        <table class="param-table">
+          <thead><tr><th>Status Code</th><th>Meaning in Plain English</th><th>Action Required</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="method-pill pill-get" style="background: var(--accent-green-soft); color: var(--accent-green);">200 OK (already_processed)</span></td>
+              <td>This event was already ingested safely in the past.</td>
+              <td>Zero action required ? idempotency protected your ledger.</td>
+            </tr>
+            <tr>
+              <td><span class="method-pill pill-get" style="background: var(--accent-amber-soft); color: var(--accent-amber);">422 Unprocessable</span></td>
+              <td>Validation error (e.g. missing amount, invalid UUID, negative value).</td>
+              <td>Check request payload fields against schema.</td>
+            </tr>
+            <tr>
+              <td><span class="method-pill pill-get" style="background: var(--accent-red-soft); color: var(--accent-red);">404 Not Found</span></td>
+              <td>Requested transaction UUID does not exist in database.</td>
+              <td>Verify transaction ID from earlier checkout responses.</td>
+            </tr>
+          </tbody>
+        </table>
       </section>
 
     </main>
