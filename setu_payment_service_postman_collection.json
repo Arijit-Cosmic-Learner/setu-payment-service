@@ -1,0 +1,117 @@
+﻿{
+  "info": {
+    "name": "Setu Payment Service",
+    "description": "API collection for the Setu Payment Service assignment",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Get All Events (Pagination)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/events?page=1&size=50",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "events"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "size",
+              "value": "50"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "2. Get All Transactions",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/transactions",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "transactions"
+          ]
+        }
+      }
+    },
+    {
+      "name": "3. Create Payment Event (Idempotent)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"event_id\": \"evt_custom_12345\",\n  \"merchant_id\": \"mid_1\",\n  \"transaction_id\": \"txn_custom_abc\",\n  \"event_type\": \"payment_initiated\",\n  \"amount\": 1500,\n  \"timestamp\": \"2024-03-20T10:00:00Z\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/events",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "events"
+          ]
+        }
+      }
+    },
+    {
+      "name": "4. Get Reconciliation Summary",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/reconciliation/summary",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "reconciliation",
+            "summary"
+          ]
+        }
+      }
+    },
+    {
+      "name": "5. Get Reconciliation Discrepancies",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/reconciliation/discrepancies",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "reconciliation",
+            "discrepancies"
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://setu-payment-service.vercel.app",
+      "type": "string"
+    }
+  ]
+}
