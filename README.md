@@ -125,7 +125,8 @@ Want to run the service locally? Follow these steps:
 
 To validate the core business logic, you can utilize the complete Postman collection that handles the Happy Path, Failure Path, Idempotency testing, and Anomaly Simulation.
 
-*Note: You can attach the exported Postman collection JSON file here, or provide a link to the shared workspace.*
+*   📄 [View the Project Summary PDF (Setu Payment Lifecycle & Reconciliation Service)](./Setu%20Payment%20Lifecycle%20%26%20Reconciliation%20Service.pdf)
+*   📄 [View the Postman Testing Guide PDF](./Postman%20Testing%20Guide.pdf)
 
 ---
 
