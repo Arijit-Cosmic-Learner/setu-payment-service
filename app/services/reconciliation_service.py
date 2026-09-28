@@ -1,4 +1,4 @@
-﻿"""
+"""
 reconciliation_service.py
 --------------------------
 Business logic for reconciliation queries.
@@ -24,6 +24,10 @@ Three discrepancy types we detect:
    status=initiated AND only 1 event exists (just payment_initiated, nothing else)
    WHY IT MATTERS: Payment was started but went completely silent.
    Could be a dropped message, a network failure, or a partner bug.
+
+4. duplicate_state_transition
+   The upstream system sent multiple events of the EXACT SAME type (e.g. 2 processed webhooks) with unique IDs.
+   WHY IT MATTERS: True event sourcing requires logging the anomaly without dropping data.
 """
 
 from datetime import datetime, timezone
@@ -203,6 +207,10 @@ def get_discrepancies(db: Session, merchant_id: str = None, discrepancy_type: st
     Type 3 - stale_initiated
       status = initiated AND transaction has only 1 event (payment_initiated)
       Payment was started but completely silent with no followup.
+
+    Type 4 - duplicate_state_transition
+      The transaction has multiple events of the exact same event_type.
+      The bank/gateway sent erratic duplicate states.
     """
 
     all_discrepancies = []
@@ -270,11 +278,38 @@ def get_discrepancies(db: Session, merchant_id: str = None, discrepancy_type: st
                 "Payment was INITIATED but no follow-up event (processed/failed) was ever received. "
                 "The transaction is stuck — likely a dropped message or partner system failure."))
 
+    # ---------------------------------------------------
+    # TYPE 4: Duplicate State Transition (Anomaly Detection)
+    # ---------------------------------------------------
+    if not discrepancy_type or discrepancy_type == "duplicate_state_transition":
+        # Subquery: find transaction_ids that have > 1 of the same event_type
+        duplicate_event_sub = (
+            db.query(models.PaymentEvent.transaction_id)
+            .group_by(models.PaymentEvent.transaction_id, models.PaymentEvent.event_type)
+            .having(func.count(models.PaymentEvent.id) > 1)
+            .subquery()
+        )
+
+        q = (
+            db.query(models.Transaction)
+            .join(models.Merchant)
+            .join(duplicate_event_sub, models.Transaction.transaction_id == duplicate_event_sub.c.transaction_id)
+        )
+        if merchant_id:
+            q = q.filter(models.Transaction.merchant_id == merchant_id)
+
+        # distinct() is needed because a transaction might have multiple duplicate types
+        for txn in q.distinct().all():
+            all_discrepancies.append(_build_discrepancy(txn, "duplicate_state_transition",
+                "The upstream partner sent multiple webhook events for the exact same state (e.g. processed). "
+                "The ledger accepted them as historical truth, but this is a buggy upstream anomaly."))
+
     # Build breakdown counts
     breakdown = {
         "settled_after_failure": sum(1 for d in all_discrepancies if d["discrepancy_type"] == "settled_after_failure"),
         "processed_not_settled": sum(1 for d in all_discrepancies if d["discrepancy_type"] == "processed_not_settled"),
         "stale_initiated":       sum(1 for d in all_discrepancies if d["discrepancy_type"] == "stale_initiated"),
+        "duplicate_state_transition": sum(1 for d in all_discrepancies if d["discrepancy_type"] == "duplicate_state_transition"),
     }
 
     return {
