@@ -282,27 +282,50 @@ def get_discrepancies(db: Session, merchant_id: str = None, discrepancy_type: st
     # TYPE 4: Duplicate State Transition (Anomaly Detection)
     # ---------------------------------------------------
     if not discrepancy_type or discrepancy_type == "duplicate_state_transition":
-        # Subquery: find transaction_ids that have > 1 of the same event_type
-        duplicate_event_sub = (
+        # Fetch raw duplicate transaction IDs safely to avoid SQLAlchemy subquery join crashes
+        duplicate_events = (
             db.query(models.PaymentEvent.transaction_id)
             .group_by(models.PaymentEvent.transaction_id, models.PaymentEvent.event_type)
             .having(func.count(models.PaymentEvent.id) > 1)
-            .subquery()
+            .all()
         )
+        duplicate_txn_ids = [evt[0] for evt in duplicate_events]
 
+        if duplicate_txn_ids:
+            q = (
+                db.query(models.Transaction)
+                .join(models.Merchant)
+                .filter(models.Transaction.transaction_id.in_(duplicate_txn_ids))
+            )
+            if merchant_id:
+                q = q.filter(models.Transaction.merchant_id == merchant_id)
+
+            for txn in q.all():
+                all_discrepancies.append(_build_discrepancy(txn, "duplicate_state_transition",
+                    "The upstream partner sent multiple webhook events for the exact same state (e.g. processed). "
+                    "The ledger accepted them as historical truth, but this is a buggy upstream anomaly."))
+
+    # ---------------------------------------------------
+    # TYPE 5: Over-settled Anomaly (Amount Mismatch)
+    # ---------------------------------------------------
+    if not discrepancy_type or discrepancy_type == "over_settled_anomaly":
+        # Master Amount < Settlement amount --> Bank paid too much!
         q = (
             db.query(models.Transaction)
             .join(models.Merchant)
-            .join(duplicate_event_sub, models.Transaction.transaction_id == duplicate_event_sub.c.transaction_id)
+            .join(models.PaymentEvent, models.Transaction.transaction_id == models.PaymentEvent.transaction_id)
+            .filter(
+                models.PaymentEvent.event_type == 'settled',
+                models.Transaction.amount < models.PaymentEvent.amount
+            )
         )
         if merchant_id:
             q = q.filter(models.Transaction.merchant_id == merchant_id)
 
-        # distinct() is needed because a transaction might have multiple duplicate types
         for txn in q.distinct().all():
-            all_discrepancies.append(_build_discrepancy(txn, "duplicate_state_transition",
-                "The upstream partner sent multiple webhook events for the exact same state (e.g. processed). "
-                "The ledger accepted them as historical truth, but this is a buggy upstream anomaly."))
+            all_discrepancies.append(_build_discrepancy(txn, "over_settled_anomaly",
+                "The settlement webhook amount was GREATER than the original master transaction amount. "
+                "The PG or Bank overpaid the merchant, meaning we are bleeding cash."))
 
     # Build breakdown counts
     breakdown = {
@@ -310,6 +333,7 @@ def get_discrepancies(db: Session, merchant_id: str = None, discrepancy_type: st
         "processed_not_settled": sum(1 for d in all_discrepancies if d["discrepancy_type"] == "processed_not_settled"),
         "stale_initiated":       sum(1 for d in all_discrepancies if d["discrepancy_type"] == "stale_initiated"),
         "duplicate_state_transition": sum(1 for d in all_discrepancies if d["discrepancy_type"] == "duplicate_state_transition"),
+        "over_settled_anomaly": sum(1 for d in all_discrepancies if d["discrepancy_type"] == "over_settled_anomaly"),
     }
 
     return {
