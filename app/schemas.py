@@ -1,4 +1,4 @@
-﻿"""
+"""
 schemas.py
 ----------
 Pydantic models that define the SHAPE of data going IN and OUT of our API.
@@ -225,7 +225,9 @@ class DiscrepancyItem(BaseModel):
     discrepancy_type: Literal[
         "settled_after_failure",
         "processed_not_settled",
-        "stale_initiated"
+        "stale_initiated",
+        "duplicate_state_transition",
+        "over_settled_anomaly"
     ]
     discrepancy_description: str
     created_at: datetime
@@ -237,6 +239,8 @@ class DiscrepancyBreakdown(BaseModel):
     settled_after_failure: int = Field(description="Payment failed but settlement was recorded (impossible state)")
     processed_not_settled: int = Field(description="Payment processed but no settlement recorded")
     stale_initiated: int = Field(description="Payment initiated but stuck with no follow-up event")
+    duplicate_state_transition: int = Field(description="Multiple webhook events for the same exact state")
+    over_settled_anomaly: int = Field(description="Settlement amount was greater than the transaction amount")
 
 
 class DiscrepanciesResponse(BaseModel):

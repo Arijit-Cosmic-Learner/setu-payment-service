@@ -1,4 +1,4 @@
-﻿"""
+"""
 routers/reconciliation.py
 --------------------------
 GET /reconciliation/summary       - aggregated financials by merchant, date, status
@@ -87,7 +87,9 @@ def reconciliation_discrepancies(
     discrepancy_type: Optional[Literal[
         "settled_after_failure",
         "processed_not_settled",
-        "stale_initiated"
+        "stale_initiated",
+        "duplicate_state_transition",
+        "over_settled_anomaly"
     ]] = Query(default=None, description="Filter by discrepancy type"),
     db: Session = Depends(get_db),
 ):
