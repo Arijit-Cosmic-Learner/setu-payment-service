@@ -918,6 +918,7 @@
           tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">No anomalies found! 🎉 Everything is perfectly reconciled.</td></tr>';
         }
       } catch (err) {
+        document.getElementById('discrepancyTableBody').innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--accent-red); padding: 2rem;">Failed to load anomalies. The backend API might be down or returning an error.</td></tr>`;
         console.error('Error loading discrepancies:', err);
       }
     }
