@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -519,9 +519,20 @@
     <section class="card">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
         <h2 class="section-title"><span>⚡</span> Live Events Feed</h2>
-        <div style="display: flex; gap: 0.5rem;">
-          <button id="prevEventPageBtn" class="btn btn-secondary" onclick="changeEventPage(-1)" disabled>← Prev</button>
-          <button id="nextEventPageBtn" class="btn btn-secondary" onclick="changeEventPage(1)">Next →</button>
+        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+          <select id="masterFilterType" class="search-input" style="padding: 0.4rem 0.75rem; font-size: 0.85rem;" onchange="handleFilterChange()">
+            <option value="">Filter By: None</option>
+            <option value="event_type">Event Type</option>
+            <option value="transaction_id">Transaction ID</option>
+            <option value="merchant_id">Merchant ID</option>
+          </select>
+          <div id="dynamicFilterContainer" style="display: none;"></div>
+          <select id="sortOrder" class="search-input" style="padding: 0.4rem 0.75rem; font-size: 0.85rem;" onchange="loadEventsFeed(1)">
+            <option value="desc">Sort: Newest</option>
+            <option value="asc">Sort: Oldest</option>
+          </select>
+          <button id="prevEventPageBtn" class="btn btn-secondary" style="padding: 0.4rem 0.75rem;" onclick="changeEventPage(-1)" disabled>← Prev</button>
+          <button id="nextEventPageBtn" class="btn btn-secondary" style="padding: 0.4rem 0.75rem;" onclick="changeEventPage(1)">Next →</button>
         </div>
       </div>
       <p class="section-desc">Real-time feed from the idempotent ingestion bus (<code class="code-chip">GET /events</code>). Showing Page <span id="currentEventPage">1</span>.</p>
@@ -705,13 +716,53 @@
     }
 
     let currentEventPage = 1;
+
+    function handleFilterChange() {
+      const type = document.getElementById('masterFilterType').value;
+      const container = document.getElementById('dynamicFilterContainer');
+      container.innerHTML = '';
+      if (!type) {
+        container.style.display = 'none';
+        loadEventsFeed(1);
+        return;
+      }
+      container.style.display = 'block';
+      
+      if (type === 'event_type') {
+        container.innerHTML = `
+          <select id="dynamicFilterValue" class="search-input" style="padding: 0.4rem 0.75rem; font-size: 0.85rem;" onchange="loadEventsFeed(1)">
+            <option value="">Select Type...</option>
+            <option value="payment_initiated">payment_initiated</option>
+            <option value="payment_processed">payment_processed</option>
+            <option value="payment_failed">payment_failed</option>
+            <option value="settled">settled</option>
+          </select>
+        `;
+      } else {
+        container.innerHTML = `
+          <input type="text" id="dynamicFilterValue" class="search-input" style="padding: 0.4rem 0.75rem; font-size: 0.85rem; width: 170px;" placeholder="Enter ${type.replace('_', ' ')}..." onchange="loadEventsFeed(1)" onkeyup="if(event.key === 'Enter') loadEventsFeed(1)">
+        `;
+      }
+    }
+
     async function loadEventsFeed(page = 1) {
       try {
         currentEventPage = page;
         document.getElementById('currentEventPage').innerText = currentEventPage;
         document.getElementById('prevEventPageBtn').disabled = currentEventPage <= 1;
 
-        const res = await fetch(`/events?page=${currentEventPage}&page_size=5`);
+        let url = `/events?page=${currentEventPage}&page_size=5`;
+        
+        const sortOrder = document.getElementById('sortOrder')?.value || 'desc';
+        url += `&sort_order=${sortOrder}`;
+
+        const filterType = document.getElementById('masterFilterType')?.value;
+        const filterValInput = document.getElementById('dynamicFilterValue');
+        if (filterType && filterValInput && filterValInput.value.trim()) {
+           url += `&${filterType}=${encodeURIComponent(filterValInput.value.trim())}`;
+        }
+
+        const res = await fetch(url);
         if (!res.ok) throw new Error('Failed to fetch events');
         const data = await res.json();
 
