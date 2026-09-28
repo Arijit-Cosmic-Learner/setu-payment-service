@@ -722,6 +722,17 @@
             seenEventTypes.add(evt.event_type);
             const duplicateFlag = isDuplicate ? `<span class="tag-inline tag-red" style="margin-left: 0.5rem; padding: 0.15rem 0.4rem; font-size: 0.65rem;">⚠️ DUPLICATE</span>` : '';
             
+            let settlementFlag = '';
+            if (evt.event_type === 'settled') {
+              if (evt.amount === data.amount) {
+                settlementFlag = `<span class="tag-inline tag-green" style="margin-left: 0.5rem; padding: 0.15rem 0.4rem; font-size: 0.65rem;">✅ FULL SETTLED</span>`;
+              } else if (evt.amount < data.amount) {
+                settlementFlag = `<span class="tag-inline tag-blue" style="margin-left: 0.5rem; padding: 0.15rem 0.4rem; font-size: 0.65rem;">ℹ️ FEE DEDUCTED</span>`;
+              } else if (evt.amount > data.amount) {
+                settlementFlag = `<span class="tag-inline tag-red" style="margin-left: 0.5rem; padding: 0.15rem 0.4rem; font-size: 0.65rem;">🚨 OVER-SETTLED</span>`;
+              }
+            }
+
             const item = document.createElement('div');
             item.className = 'timeline-item';
             item.innerHTML = `
@@ -733,6 +744,7 @@
                       ${evt.event_type}
                     </span>
                     ${duplicateFlag}
+                    ${settlementFlag}
                   </div>
                   <span style="font-size: 0.75rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">
                     ${new Date(evt.timestamp).toLocaleString()}
