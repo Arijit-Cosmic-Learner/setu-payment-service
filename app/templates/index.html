@@ -558,15 +558,18 @@
 
     <!-- SECTION 4.5: Discrepancy Operations Dashboard -->
     <section class="card" style="border-left: 4px solid var(--accent-red);">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-        <h2 class="section-title" style="color: var(--accent-red);"><span>🚨</span> Operations: Anomaly & Discrepancy Triage</h2>
-        <select id="discrepancyFilter" class="search-input" style="padding: 0.4rem 0.75rem; font-size: 0.85rem;" onchange="loadDiscrepancies()">
-          <option value="">All Anomalies</option>
-          <option value="settled_after_failure">Settled After Failure</option>
-          <option value="processed_not_settled">Processed Not Settled</option>
-          <option value="stale_initiated">Stale Initiated</option>
-          <option value="duplicate_state_transition">Duplicate Events</option>
-        </select>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 1rem;">
+        <h2 class="section-title" style="color: var(--accent-red); margin: 0;"><span>🚨</span> Anomaly and Discrepancy Portal</h2>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <input type="text" id="discrepancySearch" class="search-input" style="padding: 0.4rem 0.75rem; font-size: 0.85rem; width: 220px;" placeholder="Search Transaction ID..." onkeyup="filterDiscrepancyTable()">
+          <select id="discrepancyFilter" class="search-input" style="padding: 0.4rem 0.75rem; font-size: 0.85rem; width: 200px;" onchange="loadDiscrepancies()">
+            <option value="">All Anomalies</option>
+            <option value="settled_after_failure">Settled After Failure</option>
+            <option value="processed_not_settled">Processed Not Settled</option>
+            <option value="stale_initiated">Stale Initiated</option>
+            <option value="duplicate_state_transition">Duplicate Events</option>
+          </select>
+        </div>
       </div>
       <p class="section-desc">Automated detection of stuck, orphaned, or impossible transaction states.</p>
       <div class="table-container">
@@ -843,6 +846,22 @@
     function changeEventPage(delta) {
       const nextPage = currentEventPage + delta;
       if (nextPage >= 1) loadEventsFeed(nextPage);
+    }
+
+    function filterDiscrepancyTable() {
+      const input = document.getElementById('discrepancySearch').value.toLowerCase();
+      const tbody = document.getElementById('discrepancyTableBody');
+      const trs = tbody.getElementsByTagName('tr');
+      for (let i = 0; i < trs.length; i++) {
+        if (trs[i].cells.length > 1) {
+          const txIdText = trs[i].cells[0].textContent || trs[i].cells[0].innerText;
+          if (txIdText.toLowerCase().indexOf(input) > -1) {
+            trs[i].style.display = "";
+          } else {
+            trs[i].style.display = "none";
+          }
+        }
+      }
     }
 
     async function loadDiscrepancies() {
