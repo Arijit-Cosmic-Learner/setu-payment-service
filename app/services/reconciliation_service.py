@@ -327,9 +327,9 @@ def get_discrepancies(db: Session, merchant_id: str = None, discrepancy_type: st
                 .filter(models.Transaction.transaction_id.in_(over_settled_txn_ids))
             )
             for txn in q.all():
-            all_discrepancies.append(_build_discrepancy(txn, "over_settled_anomaly",
-                "The settlement webhook amount was GREATER than the original master transaction amount. "
-                "The PG or Bank overpaid the merchant, meaning we are bleeding cash."))
+                all_discrepancies.append(_build_discrepancy(txn, "over_settled_anomaly",
+                    "The settlement webhook amount was GREATER than the original master transaction amount. "
+                    "The PG or Bank overpaid the merchant, meaning we are bleeding cash."))
 
     # Build breakdown counts
     breakdown = {
