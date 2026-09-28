@@ -556,6 +556,36 @@
       </div>
     </section>
 
+    <!-- SECTION 4.5: Discrepancy Operations Dashboard -->
+    <section class="card" style="border-left: 4px solid var(--accent-red);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <h2 class="section-title" style="color: var(--accent-red);"><span>🚨</span> Operations: Anomaly & Discrepancy Triage</h2>
+        <select id="discrepancyFilter" class="search-input" style="padding: 0.4rem 0.75rem; font-size: 0.85rem;" onchange="loadDiscrepancies()">
+          <option value="">All Anomalies</option>
+          <option value="settled_after_failure">Settled After Failure</option>
+          <option value="processed_not_settled">Processed Not Settled</option>
+          <option value="stale_initiated">Stale Initiated</option>
+          <option value="duplicate_state_transition">Duplicate Events</option>
+        </select>
+      </div>
+      <p class="section-desc">Automated detection of stuck, orphaned, or impossible transaction states.</p>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Transaction ID</th>
+              <th>Anomaly Type</th>
+              <th>Description</th>
+              <th>Current Status</th>
+            </tr>
+          </thead>
+          <tbody id="discrepancyTableBody">
+            <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Loading anomalies...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
     <!-- SECTION 5: Technical Links -->
     <section class="card">
       <h2 class="section-title"><span>🛠️</span> Developer Documentation & Resources</h2>
@@ -682,16 +712,24 @@
 
         timeline.innerHTML = '';
         if (data.events && data.events.length > 0) {
+          const seenEventTypes = new Set();
           data.events.forEach(evt => {
+            const isDuplicate = seenEventTypes.has(evt.event_type);
+            seenEventTypes.add(evt.event_type);
+            const duplicateFlag = isDuplicate ? `<span class="tag-inline tag-red" style="margin-left: 0.5rem; padding: 0.15rem 0.4rem; font-size: 0.65rem;">⚠️ DUPLICATE</span>` : '';
+            
             const item = document.createElement('div');
             item.className = 'timeline-item';
             item.innerHTML = `
               <div class="timeline-dot ${evt.event_type.replace('payment_', '')}"></div>
               <div class="timeline-content">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
-                  <span class="tag-inline tag-${evt.event_type.includes('settled') ? 'green' : (evt.event_type.includes('failed') ? 'red' : 'blue')}">
-                    ${evt.event_type}
-                  </span>
+                  <div>
+                    <span class="tag-inline tag-${evt.event_type.includes('settled') ? 'green' : (evt.event_type.includes('failed') ? 'red' : 'blue')}">
+                      ${evt.event_type}
+                    </span>
+                    ${duplicateFlag}
+                  </div>
                   <span style="font-size: 0.75rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">
                     ${new Date(evt.timestamp).toLocaleString()}
                   </span>
@@ -807,9 +845,40 @@
       if (nextPage >= 1) loadEventsFeed(nextPage);
     }
 
+    async function loadDiscrepancies() {
+      try {
+        const filter = document.getElementById('discrepancyFilter').value;
+        const url = filter ? `/reconciliation/discrepancies?discrepancy_type=${filter}` : `/reconciliation/discrepancies`;
+        
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Failed to fetch discrepancies');
+        const data = await res.json();
+        
+        const tbody = document.getElementById('discrepancyTableBody');
+        tbody.innerHTML = '';
+        if (data.discrepancies && data.discrepancies.length > 0) {
+          data.discrepancies.forEach(d => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td><span class="code-chip" style="font-size: 0.75rem; cursor: pointer; color: var(--primary);" onclick="setSampleAndLookup('${d.transaction_id}')" title="Click to inspect">${d.transaction_id.slice(0, 8)}...</span></td>
+              <td><span class="tag-inline tag-red" style="font-size: 0.7rem;">${d.discrepancy_type}</span></td>
+              <td style="font-size: 0.8rem;">${d.discrepancy_description}</td>
+              <td><span class="tag-inline tag-${d.status === 'settled' ? 'green' : (d.status === 'failed' ? 'red' : 'blue')}">${d.status}</span></td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } else {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">No anomalies found! 🎉 Everything is perfectly reconciled.</td></tr>';
+        }
+      } catch (err) {
+        console.error('Error loading discrepancies:', err);
+      }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       loadReconciliationSummary();
       loadEventsFeed(1);
+      loadDiscrepancies();
     });
   </script>
 </body>
