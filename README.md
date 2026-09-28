@@ -76,7 +76,21 @@ The anomaly detection engine evaluates the derived state of a transaction agains
 
 ---
 
-## 7. Local Setup Instructions
+## 7. Assumptions & Tradeoffs
+
+To design a system that is functional for a 3-day assignment but signals a production-grade enterprise mindset, the following assumptions and technical tradeoffs were made:
+
+### Tradeoffs
+*   **Synchronous vs. Asynchronous Ingestion:** For this assignment, the `POST /events` endpoint writes directly to the database synchronously. **Tradeoff:** At enterprise scale (millions of events per minute), this would bottleneck the database. In a real Setu environment, events would be pushed to a message broker (like Kafka or RabbitMQ) and processed into the database asynchronously via background workers.
+*   **Real-time SQL vs. Materialized Views:** The reconciliation summary currently runs live SQL `GROUP BY` queries on the transactions table. **Tradeoff:** While blazing fast on a dataset of this size, this becomes computationally expensive at massive scale. In production, I would utilize PostgreSQL Materialized Views or run cron jobs to pre-aggregate these financial totals on a nightly basis.
+
+### Assumptions
+*   **Event Ordering:** I assumed that events might arrive out of order (e.g., a `settled` webhook arriving before `processed` due to network delays). The state machine was explicitly designed to handle this gracefully without crashing or entering a corrupted state.
+*   **Idempotency Key:** I assumed the `event_id` provided by the gateway is a true unique identifier. Our idempotency engine completely relies on this being unique per network attempt.
+
+---
+
+## 8. Local Setup Instructions
 
 Want to run the service locally? Follow these steps:
 
