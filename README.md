@@ -1,67 +1,118 @@
-﻿# Setu Payment Service
+# 🏦 Setu Payment Lifecycle & Reconciliation Service
 
-A robust, idempotent, and highly scalable Payment Reconciliation Service built with **FastAPI**, **SQLAlchemy**, **PostgreSQL**, and deployed on a serverless architecture (**Vercel + Supabase**).
+## 1. Executive Summary
 
-## Live API URL
-**Base URL:** `https://setu-payment-service.vercel.app`
+**One-Liner:** 
+A robust, highly scalable backend service designed to ingest payment lifecycle events, track dynamic transaction state machines, and automatically detect financial discrepancies through an advanced reconciliation engine.
 
-*(Note: The root path `/` is intentionally left blank. Please use the API endpoints below).*
+**Overview:**
+In modern fintech ecosystems, payment processing is rarely a single synchronous action. A single customer transaction involves multiple asynchronous hops between banks, gateways, and merchants. This project serves as the centralized source of truth for these events. It exposes a RESTful API to safely ingest continuous streams of payment data, reconstructs the journey of every transaction, and surfaces real-time financial analytics and anomalies.
 
-## 🚀 Key Features & Architectural Decisions
+---
 
-### 1. True Idempotency
-Payment systems require strict idempotency to prevent double-charging or duplicate event processing. 
-- The `events` table enforces a `UNIQUE(event_id)` constraint.
-- The `event_service` intercepts HTTP `POST` requests and gracefully handles `IntegrityError` exceptions. 
-- If a client retries sending the exact same `event_id`, the API safely ignores the duplicate and returns a `200 OK` (or `201` on first creation), ensuring external webhooks never get stuck in a failure loop.
+## 2. Problem Statement & Engineering Challenges
 
-### 2. State Machine Enforcement
-Transactions transition through strict states: `initiated` -> `processed` -> `settled` (or `failed`).
-- The system prevents invalid transitions (e.g., you cannot go from `settled` back to `initiated`).
-- If an out-of-order event arrives (e.g., `payment_settled` arrives before `payment_initiated` due to network lag), the system intelligently logs the event but does not corrupt the transaction state, allowing reconciliation to flag it.
+Payment gateways and financial aggregators face several critical engineering challenges when handling distributed payment events at scale:
 
-### 3. High-Performance SQL Reconciliation
-Instead of loading thousands of rows into Python memory to find discrepancies (which scales poorly), the reconciliation engine pushes the heavy lifting to PostgreSQL using **SQL Aggregations**.
-- Uses `CASE WHEN` and `GROUP BY` to dynamically detect `stale_initiated`, `processed_not_settled`, and `settled_after_failure` anomalies in a single, lightning-fast database query.
-- This approach handles 10,000+ events in milliseconds.
+1.  **Network Unreliability & Duplicate Data:** Network timeouts frequently cause payment partners to retry sending the same event webhook multiple times. Without strict **idempotency**, a system might process the same payment twice, leading to catastrophic double-credits.
+2.  **Fragmented Transaction States:** Events like `payment_initiated`, `payment_processed`, and `settled` arrive at different times (often days apart). Tracking the exact current state of a payment requires intelligently linking these fragmented events into a single, cohesive state machine.
+3.  **The "Black Hole" of Settlement (Reconciliation):** The most critical challenge for merchants is ensuring that a payment marked as "Successful" by the gateway actually results in money being deposited into their bank account (Settled). Manually finding transactions where money is "stuck" or where fraudulent settlements occur is virtually impossible at high volumes. 
 
-### 4. Serverless & Decoupled Architecture
-- **Compute:** Vercel Serverless Functions. Stateless, instantly scalable.
-- **Database:** Supabase (PostgreSQL). Connection pooling enabled via PgBouncer to prevent connection exhaustion from serverless cold starts.
+**The Solution:**
+This service was built specifically to solve these real-world fintech challenges. It guarantees safe, idempotent event ingestion, automatically derives the master state of every transaction, and features a purpose-built SQL reconciliation engine that flags impossible or stuck financial states before they impact merchant payouts.
 
-## 🧪 Running Locally
+---
 
-1. **Clone & Install**
+## 3. System Architecture & Tech Stack
+
+To ensure the system is production-minded, deployable, and highly efficient, the architecture was designed around modern, lightweight, and scalable technologies.
+
+*   **Backend Framework:** **FastAPI (Python)** — Chosen for its high performance, native async support, and auto-generated OpenAPI schemas.
+*   **Database:** **Supabase (PostgreSQL via SQLAlchemy)** — A serverless remote persistent database with enterprise-grade Postgres capabilities to handle high-throughput financial data safely.
+*   **Deployment:** **Vercel** — API is deployed as a serverless function ensuring scaling from zero to thousands of concurrent requests instantly.
+*   **Documentation & UI:** **HTML5, Vanilla CSS, and ReDoc** — Custom branded developer portal and visual dashboards.
+
+### Core Architectural Principles
+
+*   **Event-Sourcing & State Machine Derivation:** We treat the `events` table as an immutable ledger. When events arrive, they are appended, and the system dynamically calculates the transaction's master state.
+*   **Bulletproof Idempotency:** Using database primary key constraints on `event_id`, duplicates are swallowed gracefully returning a `200 OK` (with `already_processed` status), ensuring financial data is never corrupted by network retries.
+*   **SQL-Driven Reconciliation Engine:** Financial aggregations and anomaly detection rules are pushed down directly to the Supabase Postgres engine using optimized `GROUP BY` and `CASE WHEN` queries, guaranteeing lightning-fast metrics across millions of rows.
+
+---
+
+## 4. Live URLs & Developer Experience (DX)
+
+A significant focus was placed on Developer Experience (DX) and visual tooling to ensure the API is instantly usable by frontend engineers and integration partners.
+
+*   **🌐 Base API URL:** `https://setu-payment-service.vercel.app`
+*   **🖥️ Visual Dashboard:** [https://setu-payment-service.vercel.app/](https://setu-payment-service.vercel.app/)
+*   **📚 Branded Developer Guide (ReDoc):** [https://setu-payment-service.vercel.app/redoc](https://setu-payment-service.vercel.app/redoc)
+*   **⚙️ Interactive API Explorer (Swagger):** [https://setu-payment-service.vercel.app/docs](https://setu-payment-service.vercel.app/docs)
+
+---
+
+## 5. API Endpoint Reference
+
+| Method | Endpoint | Domain | Purpose | Key Features |
+| :--- | :--- | :--- | :--- | :--- |
+| **`POST`** | `/events` | **Ingestion** | Ingest a raw payment lifecycle event. | **Idempotent** (Duplicates return `already_processed`). |
+| **`GET`** | `/events` | **Retrieval** | Fetch a paginated ledger of all raw events. | Filterable by: `event_type`, `transaction_id`. |
+| **`GET`** | `/transactions` | **Retrieval** | Fetch a paginated list of transactions & master status. | Filterable by `merchant_id`, `status`, `date`. |
+| **`GET`** | `/transactions/{id}` | **Retrieval** | Fetch granular details of a single transaction. | Returns the complete chronological event audit trail. |
+| **`GET`** | `/reconciliation/summary` | **Recon** | Real-time SQL-aggregated financial summary. | Grouped by merchant (settlement rates), status, date. |
+| **`GET`** | `/reconciliation/discrepancies` | **Recon** | Anomaly engine. Flags transactions in stuck states. | Detects impossible/stuck financial edge-cases. |
+
+---
+
+## 6. Discrepancy Detection Rules
+
+The anomaly detection engine evaluates the derived state of a transaction against specific business rules to flag "stuck" financial states.
+
+| Discrepancy Type | Detection Condition | Real-World Impact |
+| :--- | :--- | :--- |
+| **`settled_after_failure`** | `payment_status` == failed AND `settlement_status` == settled | **High Severity.** Impossible state. Indicates severe system desync, potential fraud, or double-credit bug. |
+| **`processed_not_settled`** | `payment_status` == processed AND `settlement_status` == pending | **Medium Severity.** Customer paid successfully, but merchant hasn't received funds. Money is stuck in network. |
+| **`stale_initiated`** | `status` == initiated AND (Only 1 event exists) | **Low/Medium Severity.** Initiated payment never progressed. Normal drop-off or webhook failure. |
+
+---
+
+## 7. Local Setup Instructions
+
+Want to run the service locally? Follow these steps:
+
+1. **Clone the repository:**
    ```bash
-   git clone https://github.com/Arijit-Cosmic-Learner/setu-payment-service.git
+   git clone <YOUR-GITHUB-URL>
    cd setu-payment-service
+   ```
+2. **Set up Virtual Environment:**
+   ```bash
    python -m venv venv
-   source venv/Scripts/activate
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+3. **Install Dependencies:**
+   ```bash
    pip install -r requirements.txt
    ```
-
-2. **Database Setup**
-   Copy `.env.example` to `.env` and set your local SQLite or Postgres URL.
-   ```bash
-   alembic upgrade head
-   python scripts/seed_data.py
+4. **Environment Variables:**
+   Create a `.env` file at the root of the project with your Supabase Postgres connection string:
+   ```env
+   DATABASE_URL="postgresql://postgres:[YOUR-PASSWORD]@db.[YOUR-SUPABASE-REF].supabase.co:5432/postgres"
    ```
-
-3. **Run Server**
+5. **Run the Application:**
    ```bash
-   fastapi dev app/main.py
+   uvicorn app.main:app --reload
    ```
+   The API will be live at `http://localhost:8000`.
 
-## 📚 API Endpoints
+---
 
-- `POST /events` - Ingest a payment event.
-- `GET /events` - List events (supports pagination: `?page=1&size=50` and filtering `?transaction_id=XYZ`).
-- `GET /transactions` - List latest transaction states.
-- `GET /reconciliation/summary` - Get high-level settlement stats.
-- `GET /reconciliation/discrepancies` - Returns flagged anomalies (stale, invalid transitions).
+## 8. Postman Testing Guide
 
-## 📊 Testing
-The project includes a robust suite of `pytest` cases testing idempotency, state transitions, and SQL aggregations using an isolated in-memory database.
-```bash
-pytest
-```
+To validate the core business logic, you can utilize the complete Postman collection that handles the Happy Path, Failure Path, Idempotency testing, and Anomaly Simulation.
+
+*Note: You can attach the exported Postman collection JSON file here, or provide a link to the shared workspace.*
+
+---
+
+*I used an AI assistant (Antigravity/Claude) as a pair-programmer for architectural feedback and documentation generation. All code logic, state machine design, and edge-case handling were directed and validated by me.*
