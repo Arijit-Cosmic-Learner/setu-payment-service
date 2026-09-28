@@ -310,19 +310,23 @@ def get_discrepancies(db: Session, merchant_id: str = None, discrepancy_type: st
     # ---------------------------------------------------
     if not discrepancy_type or discrepancy_type == "over_settled_anomaly":
         # Master Amount < Settlement amount --> Bank paid too much!
-        q = (
-            db.query(models.Transaction)
-            .join(models.Merchant)
-            .join(models.PaymentEvent, models.Transaction.transaction_id == models.PaymentEvent.transaction_id)
-            .filter(
-                models.PaymentEvent.event_type == 'settled',
-                models.Transaction.amount < models.PaymentEvent.amount
+        # Safely fetch all settled events and compare in Python to prevent Postgres TypeCasting 500 errors
+        settled_events = db.query(models.PaymentEvent).filter(models.PaymentEvent.event_type == "settled").all()
+        over_settled_txn_ids = []
+        for evt in settled_events:
+            txn = db.query(models.Transaction).filter(models.Transaction.transaction_id == evt.transaction_id).first()
+            if txn and evt.amount > txn.amount:
+                if merchant_id and txn.merchant_id != merchant_id:
+                    continue
+                over_settled_txn_ids.append(txn.transaction_id)
+                
+        if over_settled_txn_ids:
+            q = (
+                db.query(models.Transaction)
+                .join(models.Merchant)
+                .filter(models.Transaction.transaction_id.in_(over_settled_txn_ids))
             )
-        )
-        if merchant_id:
-            q = q.filter(models.Transaction.merchant_id == merchant_id)
-
-        for txn in q.distinct().all():
+            for txn in q.all():
             all_discrepancies.append(_build_discrepancy(txn, "over_settled_anomaly",
                 "The settlement webhook amount was GREATER than the original master transaction amount. "
                 "The PG or Bank overpaid the merchant, meaning we are bleeding cash."))

@@ -708,7 +708,22 @@
         }
         const data = await res.json();
         document.getElementById('resTxId').innerText = data.transaction_id;
-        document.getElementById('resAmountBadge').innerText = formatINR(data.amount);
+        let settledAmount = 0;
+        let isSettled = false;
+        if (data.events && data.events.length > 0) {
+          data.events.forEach(evt => {
+            if (evt.event_type === 'settled') {
+              settledAmount = evt.amount;
+              isSettled = true;
+            }
+          });
+        }
+
+        if (isSettled) {
+          document.getElementById('resAmountBadge').innerHTML = `<span style="font-size:0.75rem; color:var(--text-muted); margin-right:0.5rem;">ORDER: ${formatINR(data.amount)}</span> SETTLED: ${formatINR(settledAmount)}`;
+        } else {
+          document.getElementById('resAmountBadge').innerHTML = `<span style="font-size:0.75rem; color:var(--text-muted); margin-right:0.5rem;">ORDER</span> ${formatINR(data.amount)}`;
+        }
 
         const badge = document.getElementById('resStatusBadge');
         badge.className = `tag-inline tag-${data.status === 'settled' ? 'green' : (data.status === 'failed' ? 'red' : 'blue')}`;
