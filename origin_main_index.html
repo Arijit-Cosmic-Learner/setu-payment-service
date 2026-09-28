@@ -1,0 +1,933 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Setu Payment & Reconciliation Service</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --card-border: #e2e8f0;
+      --primary: #0f172a;
+      --primary-light: #1e293b;
+      --accent: #10b981;
+      --accent-soft: #ecfdf5;
+      --accent-blue: #3b82f6;
+      --accent-blue-soft: #eff6ff;
+      --accent-amber: #f59e0b;
+      --accent-amber-soft: #fffbeb;
+      --accent-red: #ef4444;
+      --accent-red-soft: #fef2f2;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      line-height: 1.5;
+    }
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand-group { display: flex; align-items: center; gap: 0.75rem; }
+    .brand-logo {
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+      color: #fff;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+    }
+    .brand-title { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.02em; }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.25rem 0.6rem;
+      background: var(--accent-soft);
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+    .nav-actions { display: flex; align-items: center; gap: 0.75rem; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+    .btn-secondary { background: #fff; border-color: var(--card-border); color: var(--text-main); }
+    .btn-secondary:hover { background: #f1f5f9; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-light); }
+    .container { max-width: 1200px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+    .hero { text-align: center; margin-bottom: 3.5rem; }
+    .hero-tag {
+      display: inline-block;
+      padding: 0.35rem 0.85rem;
+      background: var(--accent-blue-soft);
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+    }
+    .hero h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin-bottom: 1rem;
+      color: var(--primary);
+    }
+    .hero p {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      max-width: 780px;
+      margin: 0 auto 2rem;
+    }
+    .hero-pills { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem; }
+    .pill {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.9rem;
+      background: #fff;
+      border: 1px solid var(--card-border);
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      box-shadow: var(--shadow-sm);
+    }
+    .section-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .section-desc { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 2.5rem;
+    }
+    .flow-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1rem;
+    }
+    .flow-step {
+      background: #f8fafc;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+    }
+    .flow-step-num {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+    .flow-step-title { font-weight: 700; font-size: 1rem; margin-bottom: 0.35rem; }
+    .flow-step-desc { font-size: 0.85rem; color: var(--text-muted); }
+    .tag-amber { color: #b45309; background: var(--accent-amber-soft); border: 1px solid #fde68a; }
+    .tag-blue { color: #1d4ed8; background: var(--accent-blue-soft); border: 1px solid #bfdbfe; }
+    .tag-green { color: #047857; background: var(--accent-soft); border: 1px solid #a7f3d0; }
+    .tag-red { color: #b91c1c; background: var(--accent-red-soft); border: 1px solid #fecaca; }
+    .tag-inline {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 1.75rem;
+    }
+    .stat-box {
+      background: #f8fafc;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.35rem;
+    }
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: -0.02em;
+    }
+    .stat-subtext { font-size: 0.8rem; color: var(--accent); font-weight: 600; margin-top: 0.25rem; }
+    .table-container {
+      overflow-x: auto;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+    }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.875rem; }
+    th {
+      background: #f1f5f9;
+      padding: 0.85rem 1rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--card-border);
+    }
+    td { padding: 0.9rem 1rem; border-bottom: 1px solid var(--card-border); color: var(--text-main); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
+    .code-chip {
+      font-family: 'JetBrains Mono', monospace;
+      background: #e2e8f0;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+    .search-box-group { display: flex; gap: 0.75rem; margin-bottom: 1.25rem; }
+    .search-input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-sm);
+      font-size: 0.95rem;
+      font-family: 'JetBrains Mono', monospace;
+      outline: none;
+    }
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1);
+    }
+    .sample-chips {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .sample-chip-btn {
+      background: #fff;
+      border: 1px dashed var(--card-border);
+      padding: 0.2rem 0.6rem;
+      border-radius: var(--radius-sm);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      cursor: pointer;
+      color: var(--accent-blue);
+    }
+    .sample-chip-btn:hover { background: var(--accent-blue-soft); }
+    .timeline {
+      position: relative;
+      padding-left: 2rem;
+      margin-top: 1.5rem;
+      border-left: 2px solid var(--card-border);
+    }
+    .timeline-item { position: relative; margin-bottom: 1.5rem; }
+    .timeline-item:last-child { margin-bottom: 0; }
+    .timeline-dot {
+      position: absolute;
+      left: -2.55rem;
+      top: 0.2rem;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid var(--primary);
+    }
+    .timeline-dot.initiated { border-color: var(--accent-amber); }
+    .timeline-dot.processed { border-color: var(--accent-blue); }
+    .timeline-dot.settled { border-color: var(--accent); }
+    .timeline-dot.failed { border-color: var(--accent-red); }
+    .timeline-content {
+      background: #f8fafc;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.25rem;
+    }
+    .progress-bar-bg {
+      width: 100%;
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 9999px;
+      overflow: hidden;
+      margin-top: 0.35rem;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 9999px;
+      transition: width 0.6s ease;
+    }
+    .links-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+    .link-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.85rem;
+      padding: 1.25rem;
+      background: #f8fafc;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.2s ease;
+    }
+    .link-card:hover {
+      background: #fff;
+      border-color: var(--primary);
+      box-shadow: var(--shadow-md);
+    }
+    .link-card-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.2rem; }
+    .link-card-desc { font-size: 0.8rem; color: var(--text-muted); }
+    footer {
+      text-align: center;
+      padding: 3rem 1rem;
+      border-top: 1px solid var(--card-border);
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 1.85rem; }
+      .navbar { padding: 1rem; }
+      .stats-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="brand-group">
+      <div class="brand-logo">S</div>
+      <div>
+        <div class="brand-title">Setu Payment Service</div>
+      </div>
+      <div class="status-badge">
+        <div class="status-dot"></div>
+        <span>Live Production</span>
+      </div>
+    </div>
+    <div class="nav-actions">
+      <a href="/docs" target="_blank" class="btn btn-primary">Swagger UI (/docs)</a>
+      <a href="/redoc" target="_blank" class="btn btn-secondary">ReDoc</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <header class="hero">
+      <div class="hero-tag">Payment Settlement & Reconciliation Engine</div>
+      <h1>Event-Driven Financial Ledger & Reconciler</h1>
+      <p>
+        An enterprise-grade backend engineered to ingest real-time payment lifecycle events,
+        safeguard idempotent state transitions, and surface instant reconciliation intelligence for merchants.
+      </p>
+      <div class="hero-pills">
+        <div class="pill">ΓÜí 100% Idempotent Ingestion</div>
+        <div class="pill">≡ƒöä Out-of-Order Resilient</div>
+        <div class="pill">≡ƒôè Automated Discrepancy Auditing</div>
+        <div class="pill">≡ƒÅó Multi-Merchant Settlement</div>
+      </div>
+    </header>
+
+    <!-- SECTION 1: The Lifecycle -->
+    <section class="card">
+      <h2 class="section-title"><span>≡ƒôû</span> How It Works: The Payment Lifecycle</h2>
+      <p class="section-desc">
+        Every transaction travels through deterministic states. Events can arrive asynchronously or out-of-order without corrupting ledger integrity.
+      </p>
+      <div class="flow-grid">
+        <div class="flow-step">
+          <div class="flow-step-num">1</div>
+          <span class="tag-inline tag-amber">payment_initiated</span>
+          <h3 class="flow-step-title">1. Checkout Initiated</h3>
+          <p class="flow-step-desc">The customer initiates payment on the merchant app. Transaction record is created with initial state.</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">2</div>
+          <span class="tag-inline tag-blue">payment_processed</span>
+          <h3 class="flow-step-title">2. Gateway Processed</h3>
+          <p class="flow-step-desc">Bank/Payment gateway authorizes and captures the amount. Transaction state updates to processed.</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">3</div>
+          <span class="tag-inline tag-green">settled</span>
+          <h3 class="flow-step-title">3. Merchant Settlement</h3>
+          <p class="flow-step-desc">Funds are successfully credited to the merchant account. Reconciliation marks transaction as completed.</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">Γ£ò</div>
+          <span class="tag-inline tag-red">payment_failed</span>
+          <h3 class="flow-step-title">Failure Path</h3>
+          <p class="flow-step-desc">If the bank declines or times out, the failure state is recorded for automated refund auditing.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: Live Reconciliation Summary -->
+    <section class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <h2 class="section-title"><span>≡ƒôè</span> Live Financial Reconciliation Summary</h2>
+        <button id="refreshSummaryBtn" class="btn btn-secondary" onclick="loadReconciliationSummary()">≡ƒöä Refresh Data</button>
+      </div>
+      <p class="section-desc">Live telemetry aggregated across all transactions stored in the database.</p>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Total Transactions</div>
+          <div class="stat-value" id="totalTxCount">Loading...</div>
+          <div class="stat-subtext" id="totalAmountText">Fetching...</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Settled Amount</div>
+          <div class="stat-value" id="settledAmount">Loading...</div>
+          <div class="stat-subtext" id="settlementPct">--% settled</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Active Merchants</div>
+          <div class="stat-value" id="merchantCount">5</div>
+          <div class="stat-subtext">Enterprise Portfolios</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Engine Status</div>
+          <div class="stat-value" style="color: var(--accent);">Healthy</div>
+          <div class="stat-subtext">Active & Syncing</div>
+        </div>
+      </div>
+
+      <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 0.75rem;">Merchant Settlement Breakdown</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Merchant ID</th>
+              <th>Merchant Name</th>
+              <th>Total Transactions</th>
+              <th>Gross Amount (INR)</th>
+              <th>Settled Amount (INR)</th>
+              <th>Settlement Rate</th>
+            </tr>
+          </thead>
+          <tbody id="merchantTableBody">
+            <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Loading merchant statistics...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 3: Transaction Inspector -->
+    <section class="card">
+      <h2 class="section-title"><span>≡ƒöì</span> Interactive Transaction Inspector</h2>
+      <p class="section-desc">Enter any transaction ID to reconstruct its complete lifecycle audit trail in real time.</p>
+
+      <div class="search-box-group">
+        <input type="text" id="txIdInput" class="search-input" placeholder="Enter Transaction UUID (e.g. edb15f35-809b-4353-9d3c-01fb5a88f537)" onkeyup="if(event.key === 'Enter') lookupTransaction(); if(this.value.trim() === '') document.getElementById('txResultContainer').style.display = 'none';">
+        <button class="btn btn-primary" onclick="lookupTransaction()">Inspect</button>
+      </div>
+
+      <div class="sample-chips">
+        <span>Try sample IDs:</span>
+        <button class="sample-chip-btn" onclick="setSampleAndLookup('edb15f35-809b-4353-9d3c-01fb5a88f537')">edb15f35 (Settled)</button>
+        <button class="sample-chip-btn" onclick="setSampleAndLookup('6c0926f8-089f-495c-afd6-6297688dd1f7')">6c0926f8 (StyleHub)</button>
+        <button class="sample-chip-btn" onclick="setSampleAndLookup('865ac99c-8bc9-4828-8e28-a3aa00540f44')">865ac99c (TechBazaar)</button>
+      </div>
+
+      <div id="txResultContainer" style="display: none;">
+        <div style="background: #fff; border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 1.25rem; margin-top: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
+            <div>
+              <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">TRANSACTION ID</span>
+              <div style="font-family: 'JetBrains Mono', monospace; font-weight: 700;" id="resTxId">--</div>
+            </div>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <span id="resStatusBadge" class="tag-inline tag-green">SETTLED</span>
+              <span id="resAmountBadge" style="font-weight: 700; font-size: 1.1rem;">Γé╣0.00</span>
+            </div>
+          </div>
+          <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">EVENT LIFECYCLE TIMELINE:</h4>
+          <div class="timeline" id="resTimeline"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: Live Events Feed -->
+    <section class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <h2 class="section-title"><span>ΓÜí</span> Live Events Feed</h2>
+        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+          <select id="masterFilterType" class="search-input" style="padding: 0.4rem 0.75rem; font-size: 0.85rem;" onchange="handleFilterChange()">
+            <option value="">Filter By: None</option>
+            <option value="event_type">Event Type</option>
+            <option value="transaction_id">Transaction ID</option>
+            <option value="merchant_id">Merchant ID</option>
+          </select>
+          <div id="dynamicFilterContainer" style="display: none;"></div>
+          <select id="sortOrder" class="search-input" style="padding: 0.4rem 0.75rem; font-size: 0.85rem;" onchange="loadEventsFeed(1)">
+            <option value="desc">Sort: Newest</option>
+            <option value="asc">Sort: Oldest</option>
+          </select>
+          <button id="prevEventPageBtn" class="btn btn-secondary" style="padding: 0.4rem 0.75rem;" onclick="changeEventPage(-1)" disabled>ΓåÉ Prev</button>
+          <button id="nextEventPageBtn" class="btn btn-secondary" style="padding: 0.4rem 0.75rem;" onclick="changeEventPage(1)">Next ΓåÆ</button>
+        </div>
+      </div>
+      <p class="section-desc">Real-time feed from the idempotent ingestion bus (<code class="code-chip">GET /events</code>). Showing Page <span id="currentEventPage">1</span>.</p>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Event ID</th>
+              <th>Type</th>
+              <th>Transaction ID</th>
+              <th>Merchant</th>
+              <th>Amount</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody id="eventsTableBody">
+            <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Loading events feed...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 4.5: Discrepancy Operations Dashboard -->
+    <section class="card" style="border-left: 4px solid var(--accent-red);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 1rem;">
+        <h2 class="section-title" style="color: var(--accent-red); margin: 0;"><span>≡ƒÜ¿</span> Anomaly and Discrepancy Portal</h2>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <input type="text" id="discrepancySearch" class="search-input" style="padding: 0.4rem 0.75rem; font-size: 0.85rem; width: 220px;" placeholder="Search Transaction ID..." onkeyup="filterDiscrepancyTable()">
+          <select id="discrepancyFilter" class="search-input" style="padding: 0.4rem 0.75rem; font-size: 0.85rem; width: 200px;" onchange="loadDiscrepancies()">
+            <option value="">All Anomalies</option>
+            <option value="settled_after_failure">Settled After Failure</option>
+            <option value="processed_not_settled">Processed Not Settled</option>
+            <option value="stale_initiated">Stale Initiated</option>
+            <option value="duplicate_state_transition">Duplicate Events</option>
+            <option value="over_settled_anomaly">Amount Over-Settled</option>
+          </select>
+        </div>
+      </div>
+      <p class="section-desc">Automated detection of stuck, orphaned, or impossible transaction states.</p>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Transaction ID</th>
+              <th>Anomaly Type</th>
+              <th>Description</th>
+              <th>Current Status</th>
+            </tr>
+          </thead>
+          <tbody id="discrepancyTableBody">
+            <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Loading anomalies...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 5: Technical Links -->
+    <section class="card">
+      <h2 class="section-title"><span>≡ƒ¢á∩╕Å</span> Developer Documentation & Resources</h2>
+      <p class="section-desc">Access technical specifications, interactive OpenAPI schemas, and endpoints.</p>
+      <div class="links-grid">
+        <a href="/docs" target="_blank" class="link-card">
+          <div style="font-size: 1.4rem;">ΓÜí</div>
+          <div>
+            <div class="link-card-title">Interactive Swagger UI</div>
+            <div class="link-card-desc">Execute API calls live with schema validation at <code class="code-chip">/docs</code></div>
+          </div>
+        </a>
+        <a href="/redoc" target="_blank" class="link-card">
+          <div style="font-size: 1.4rem;">≡ƒôÜ</div>
+          <div>
+            <div class="link-card-title">ReDoc Documentation</div>
+            <div class="link-card-desc">Clean, responsive OpenAPI documentation at <code class="code-chip">/redoc</code></div>
+          </div>
+        </a>
+        <a href="/health" target="_blank" class="link-card">
+          <div style="font-size: 1.4rem;">≡ƒÆô</div>
+          <div>
+            <div class="link-card-title">JSON Health Check</div>
+            <div class="link-card-desc">Machine-readable automated probe endpoint at <code class="code-chip">/health</code></div>
+          </div>
+        </a>
+        <a href="https://github.com/Arijit-Cosmic-Learner/setu-payment-service" target="_blank" class="link-card">
+          <div style="font-size: 1.4rem;">≡ƒÆ╗</div>
+          <div>
+            <div class="link-card-title">GitHub Repository</div>
+            <div class="link-card-desc">Source code, database migrations, and CI/CD pipelines</div>
+          </div>
+        </a>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <div style="font-weight: 600; margin-bottom: 0.35rem;">Setu Payment & Reconciliation Service</div>
+    <div>Built with FastAPI, PostgreSQL & SQLAlchemy. Designed for high-reliability financial systems.</div>
+  </footer>
+
+  <script>
+    function formatINR(val) {
+      const num = parseFloat(val);
+      if (isNaN(num)) return 'Γé╣0.00';
+      return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(num);
+    }
+
+    async function loadReconciliationSummary() {
+      try {
+        const btn = document.getElementById('refreshSummaryBtn');
+        if (btn) btn.innerText = 'Refreshing...';
+        const res = await fetch('/reconciliation/summary');
+        if (!res.ok) throw new Error('Failed to fetch summary');
+        const data = await res.json();
+
+        document.getElementById('totalTxCount').innerText = Number(data.total_transactions).toLocaleString();
+        document.getElementById('totalAmountText').innerText = `Gross: ${formatINR(data.total_amount)}`;
+        document.getElementById('settledAmount').innerText = formatINR(data.total_settled_amount);
+        
+        const rate = ((parseFloat(data.total_settled_amount) / parseFloat(data.total_amount)) * 100).toFixed(1);
+        document.getElementById('settlementPct').innerText = `${rate}% settled`;
+
+        const tbody = document.getElementById('merchantTableBody');
+        tbody.innerHTML = '';
+        if (data.by_merchant && data.by_merchant.length > 0) {
+          window.availableMerchants = data.by_merchant; // Store for dynamic filters
+          document.getElementById('merchantCount').innerText = data.by_merchant.length;
+          data.by_merchant.forEach(m => {
+            const tr = document.createElement('tr');
+            const pct = parseFloat(m.settlement_rate_pct || 0).toFixed(1);
+            tr.innerHTML = `
+              <td><span class="code-chip">${m.merchant_id}</span></td>
+              <td><strong>${m.merchant_name}</strong></td>
+              <td>${Number(m.total_transactions).toLocaleString()}</td>
+              <td>${formatINR(m.total_amount)}</td>
+              <td><strong>${formatINR(m.settled_amount)}</strong></td>
+              <td style="min-width: 140px;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700;">
+                  <span>${pct}%</span>
+                  <span style="color: var(--text-muted);">${m.settled_count}/${m.total_transactions} tx</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" style="width: ${pct}%;"></div>
+                </div>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
+      } catch (err) {
+        console.error('Error loading summary:', err);
+      } finally {
+        const btn = document.getElementById('refreshSummaryBtn');
+        if (btn) btn.innerText = '≡ƒöä Refresh Data';
+      }
+    }
+
+    async function lookupTransaction() {
+      const txId = document.getElementById('txIdInput').value.trim();
+      if (!txId) {
+        alert('Please enter a Transaction ID');
+        return;
+      }
+      const container = document.getElementById('txResultContainer');
+      container.style.display = 'block';
+      const timeline = document.getElementById('resTimeline');
+      timeline.innerHTML = '<div style="color: var(--text-muted);">Fetching lifecycle events...</div>';
+
+      try {
+        const res = await fetch(`/transactions/${txId}`);
+        if (!res.ok) {
+          timeline.innerHTML = '<div style="color: var(--accent-red); font-weight: 600;">Transaction not found or invalid UUID.</div>';
+          return;
+        }
+        const data = await res.json();
+        document.getElementById('resTxId').innerText = data.transaction_id;
+        let settledAmount = 0;
+        let isSettled = false;
+        if (data.events && data.events.length > 0) {
+          data.events.forEach(evt => {
+            if (evt.event_type === 'settled') {
+              settledAmount = evt.amount;
+              isSettled = true;
+            }
+          });
+        }
+
+        if (isSettled) {
+          document.getElementById('resAmountBadge').innerHTML = `<span style="font-size:0.75rem; color:var(--text-muted); margin-right:0.5rem;">ORDER: ${formatINR(data.amount)}</span> SETTLED: ${formatINR(settledAmount)}`;
+        } else {
+          document.getElementById('resAmountBadge').innerHTML = `<span style="font-size:0.75rem; color:var(--text-muted); margin-right:0.5rem;">ORDER</span> ${formatINR(data.amount)}`;
+        }
+
+        const badge = document.getElementById('resStatusBadge');
+        badge.className = `tag-inline tag-${data.status === 'settled' ? 'green' : (data.status === 'failed' ? 'red' : 'blue')}`;
+        badge.innerText = data.status.toUpperCase();
+
+        timeline.innerHTML = '';
+        if (data.events && data.events.length > 0) {
+          const seenEventTypes = new Set();
+          data.events.forEach(evt => {
+            const isDuplicate = seenEventTypes.has(evt.event_type);
+            seenEventTypes.add(evt.event_type);
+            const duplicateFlag = isDuplicate ? `<span class="tag-inline tag-red" style="margin-left: 0.5rem; padding: 0.15rem 0.4rem; font-size: 0.65rem;">ΓÜá∩╕Å DUPLICATE</span>` : '';
+            
+            let settlementFlag = '';
+            if (evt.event_type === 'settled') {
+              if (evt.amount === data.amount) {
+                settlementFlag = `<span class="tag-inline tag-green" style="margin-left: 0.5rem; padding: 0.15rem 0.4rem; font-size: 0.65rem;">Γ£à FULL SETTLED</span>`;
+              } else if (evt.amount < data.amount) {
+                settlementFlag = `<span class="tag-inline tag-blue" style="margin-left: 0.5rem; padding: 0.15rem 0.4rem; font-size: 0.65rem;">Γä╣∩╕Å FEE DEDUCTED</span>`;
+              } else if (evt.amount > data.amount) {
+                settlementFlag = `<span class="tag-inline tag-red" style="margin-left: 0.5rem; padding: 0.15rem 0.4rem; font-size: 0.65rem;">≡ƒÜ¿ OVER-SETTLED</span>`;
+              }
+            }
+
+            const item = document.createElement('div');
+            item.className = 'timeline-item';
+            item.innerHTML = `
+              <div class="timeline-dot ${evt.event_type.replace('payment_', '')}"></div>
+              <div class="timeline-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                  <div>
+                    <span class="tag-inline tag-${evt.event_type.includes('settled') ? 'green' : (evt.event_type.includes('failed') ? 'red' : 'blue')}">
+                      ${evt.event_type}
+                    </span>
+                    ${duplicateFlag}
+                    ${settlementFlag}
+                  </div>
+                  <span style="font-size: 0.75rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">
+                    ${new Date(evt.timestamp).toLocaleString()}
+                  </span>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-muted);">
+                  Event ID: <span class="code-chip">${evt.event_id}</span> | Amount: <strong>${formatINR(evt.amount)}</strong>
+                </div>
+              </div>
+            `;
+            timeline.appendChild(item);
+          });
+        } else {
+          timeline.innerHTML = '<div style="color: var(--text-muted);">No events recorded for this transaction.</div>';
+        }
+      } catch (err) {
+        timeline.innerHTML = `<div style="color: var(--accent-red);">Error: ${err.message}</div>`;
+      }
+    }
+
+    function setSampleAndLookup(sampleId) {
+      document.getElementById('txIdInput').value = sampleId;
+      lookupTransaction();
+    }
+
+    let currentEventPage = 1;
+
+    function handleFilterChange() {
+      const type = document.getElementById('masterFilterType').value;
+      const container = document.getElementById('dynamicFilterContainer');
+      container.innerHTML = '';
+      if (!type) {
+        container.style.display = 'none';
+        loadEventsFeed(1);
+        return;
+      }
+      container.style.display = 'block';
+      
+      if (type === 'event_type') {
+        container.innerHTML = `
+          <select id="dynamicFilterValue" class="search-input" style="padding: 0.4rem 0.75rem; font-size: 0.85rem;" onchange="loadEventsFeed(1)">
+            <option value="">Select Type...</option>
+            <option value="payment_initiated">payment_initiated</option>
+            <option value="payment_processed">payment_processed</option>
+            <option value="payment_failed">payment_failed</option>
+            <option value="settled">settled</option>
+          </select>
+        `;
+      } else if (type === 'merchant_id' && window.availableMerchants) {
+        let options = '<option value="">Select Merchant...</option>';
+        window.availableMerchants.forEach(m => {
+          options += `<option value="${m.merchant_id}">${m.merchant_name} (${m.merchant_id})</option>`;
+        });
+        container.innerHTML = `
+          <select id="dynamicFilterValue" class="search-input" style="padding: 0.4rem 0.75rem; font-size: 0.85rem;" onchange="loadEventsFeed(1)">
+            ${options}
+          </select>
+        `;
+      } else {
+        container.innerHTML = `
+          <input type="text" id="dynamicFilterValue" class="search-input" style="padding: 0.4rem 0.75rem; font-size: 0.85rem; width: 170px;" placeholder="Enter ${type.replace('_', ' ')}..." onchange="loadEventsFeed(1)" onkeyup="if(event.key === 'Enter') loadEventsFeed(1)">
+        `;
+      }
+    }
+
+    async function loadEventsFeed(page = 1) {
+      try {
+        currentEventPage = page;
+        document.getElementById('currentEventPage').innerText = currentEventPage;
+        document.getElementById('prevEventPageBtn').disabled = currentEventPage <= 1;
+
+        let url = `/events?page=${currentEventPage}&page_size=5`;
+        
+        const sortOrder = document.getElementById('sortOrder')?.value || 'desc';
+        url += `&sort_order=${sortOrder}`;
+
+        const filterType = document.getElementById('masterFilterType')?.value;
+        const filterValInput = document.getElementById('dynamicFilterValue');
+        if (filterType && filterValInput && filterValInput.value.trim()) {
+           url += `&${filterType}=${encodeURIComponent(filterValInput.value.trim())}`;
+        }
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Failed to fetch events');
+        const data = await res.json();
+
+        const tbody = document.getElementById('eventsTableBody');
+        tbody.innerHTML = '';
+        if (data.items && data.items.length > 0) {
+          data.items.forEach(evt => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td><span class="code-chip" style="font-size: 0.75rem;">${evt.event_id.slice(0, 8)}...</span></td>
+              <td>
+                <span class="tag-inline tag-${evt.event_type === 'settled' ? 'green' : (evt.event_type === 'payment_failed' ? 'red' : 'blue')}">
+                  ${evt.event_type}
+                </span>
+              </td>
+              <td><span class="code-chip" style="font-size: 0.75rem; cursor: pointer;" onclick="setSampleAndLookup('${evt.transaction_id}')">${evt.transaction_id.slice(0, 8)}...</span></td>
+              <td><strong>${evt.merchant_id}</strong></td>
+              <td>${formatINR(evt.amount)}</td>
+              <td style="font-size: 0.8rem; color: var(--text-muted);">${new Date(evt.timestamp).toLocaleString()}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
+      } catch (err) {
+        console.error('Error loading events:', err);
+      }
+    }
+
+    function changeEventPage(delta) {
+      const nextPage = currentEventPage + delta;
+      if (nextPage >= 1) loadEventsFeed(nextPage);
+    }
+
+    function filterDiscrepancyTable() {
+      const input = document.getElementById('discrepancySearch').value.toLowerCase();
+      const tbody = document.getElementById('discrepancyTableBody');
+      const trs = tbody.getElementsByTagName('tr');
+      for (let i = 0; i < trs.length; i++) {
+        if (trs[i].cells.length > 1) {
+          const txIdText = trs[i].cells[0].textContent || trs[i].cells[0].innerText;
+          if (txIdText.toLowerCase().indexOf(input) > -1) {
+            trs[i].style.display = "";
+          } else {
+            trs[i].style.display = "none";
+          }
+        }
+      }
+    }
+
+    async function loadDiscrepancies() {
+      try {
+        const filter = document.getElementById('discrepancyFilter').value;
+        const url = filter ? `/reconciliation/discrepancies?discrepancy_type=${filter}` : `/reconciliation/discrepancies`;
+        
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Failed to fetch discrepancies');
+        const data = await res.json();
+        
+        const tbody = document.getElementById('discrepancyTableBody');
+        tbody.innerHTML = '';
+        if (data.discrepancies && data.discrepancies.length > 0) {
+          data.discrepancies.forEach(d => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td><span class="code-chip" style="font-size: 0.75rem; cursor: pointer; color: var(--primary);" onclick="setSampleAndLookup('${d.transaction_id}')" title="Click to inspect">${d.transaction_id.slice(0, 8)}...</span></td>
+              <td><span class="tag-inline tag-red" style="font-size: 0.7rem;">${d.discrepancy_type}</span></td>
+              <td style="font-size: 0.8rem;">${d.discrepancy_description}</td>
+              <td><span class="tag-inline tag-${d.status === 'settled' ? 'green' : (d.status === 'failed' ? 'red' : 'blue')}">${d.status}</span></td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } else {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">No anomalies found! ≡ƒÄë Everything is perfectly reconciled.</td></tr>';
+        }
+      } catch (err) {
+        document.getElementById('discrepancyTableBody').innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--accent-red); padding: 2rem;">Failed to load anomalies. The backend API might be down or returning an error.</td></tr>`;
+        console.error('Error loading discrepancies:', err);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadReconciliationSummary();
+      loadEventsFeed(1);
+      loadDiscrepancies();
+    });
+  </script>
+</body>
+</html>
