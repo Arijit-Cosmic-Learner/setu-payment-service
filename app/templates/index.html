@@ -486,7 +486,7 @@
       <p class="section-desc">Enter any transaction ID to reconstruct its complete lifecycle audit trail in real time.</p>
 
       <div class="search-box-group">
-        <input type="text" id="txIdInput" class="search-input" placeholder="Enter Transaction UUID (e.g. edb15f35-809b-4353-9d3c-01fb5a88f537)">
+        <input type="text" id="txIdInput" class="search-input" placeholder="Enter Transaction UUID (e.g. edb15f35-809b-4353-9d3c-01fb5a88f537)" onkeyup="if(event.key === 'Enter') lookupTransaction(); if(this.value.trim() === '') document.getElementById('txResultContainer').style.display = 'none';">
         <button class="btn btn-primary" onclick="lookupTransaction()">Inspect</button>
       </div>
 
@@ -623,6 +623,7 @@
         const tbody = document.getElementById('merchantTableBody');
         tbody.innerHTML = '';
         if (data.by_merchant && data.by_merchant.length > 0) {
+          window.availableMerchants = data.by_merchant; // Store for dynamic filters
           document.getElementById('merchantCount').innerText = data.by_merchant.length;
           data.by_merchant.forEach(m => {
             const tr = document.createElement('tr');
@@ -736,6 +737,16 @@
             <option value="payment_processed">payment_processed</option>
             <option value="payment_failed">payment_failed</option>
             <option value="settled">settled</option>
+          </select>
+        `;
+      } else if (type === 'merchant_id' && window.availableMerchants) {
+        let options = '<option value="">Select Merchant...</option>';
+        window.availableMerchants.forEach(m => {
+          options += `<option value="${m.merchant_id}">${m.merchant_name} (${m.merchant_id})</option>`;
+        });
+        container.innerHTML = `
+          <select id="dynamicFilterValue" class="search-input" style="padding: 0.4rem 0.75rem; font-size: 0.85rem;" onchange="loadEventsFeed(1)">
+            ${options}
           </select>
         `;
       } else {
